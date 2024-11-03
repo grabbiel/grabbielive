@@ -15,6 +15,8 @@
 #define PORT 443
 #define BUFFER_SIZE 4096
 #define ALLOWED_DOMAIN "grabbiel.com"
+
+// TODO: reduce logic
 bool is_allowed_client(const struct sockaddr_in &client_addr,
                        const std::string &origin) {
   char client_ip[INET_ADDRSTRLEN];
