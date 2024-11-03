@@ -23,15 +23,13 @@ bool is_allowed_client(const struct sockaddr_in &client_addr,
   inet_ntop(AF_INET, &(client_addr.sin_addr), client_ip, INET_ADDRSTRLEN);
   std::string ip_str = client_ip;
 
-  bool ip_allowed = ALLOWED_IPS.find(ip_str) != ALLOWED_IPS.end();
-
   bool origin_allowed =
       origin.empty() || origin.find(ALLOWED_DOMAIN) != std::string::npos;
 
   printf("Connection attempt from IP: %s, Origin: %s\n", ip_str.c_str(),
          origin.empty() ? "direct acess" : origin.c_str());
 
-  return ip_allowed || origin_allowed;
+  return origin_allowed;
 }
 
 std::string get_origin_header(const std::string &request) {
