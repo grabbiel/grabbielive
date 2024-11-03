@@ -1,6 +1,11 @@
 # Prerequisites
 *.d
 
+# Executables
+/*
+!/*.*
+!/*/
+
 # Compiled Object files
 *.slo
 *.lo

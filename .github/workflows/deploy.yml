@@ -1,0 +1,37 @@
+name: Deploy C++ Server
+
+on:
+  push:
+    branches:
+      - main  # or your preferred branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Deploy to VM
+      env:
+        PRIVATE_KEY: ${{ secrets.GCP_SSH_PRIVATE_KEY }}
+        VM_USER: ${{ secrets.VM_USER }}
+        VM_IP: ${{ secrets.VM_IP }}
+      run: |
+        # Setup SSH
+        mkdir -p ~/.ssh
+        echo "$PRIVATE_KEY" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        
+        # Add VM host key to known hosts
+        ssh-keyscan $VM_IP >> ~/.ssh/known_hosts
+        
+        # Copy files to VM
+        scp server.cpp $VM_USER@$VM_IP:/repo/server/
+        
+        # SSH commands to rebuild and restart service
+        ssh $VM_USER@$VM_IP '
+          cd /repo/server && \
+          sudo g++ -std=c++11 -o server server.cpp -lssl -lcrypto -pthread -lsystemd && \
+          sudo systemctl restart grabbiel-server
+        '
