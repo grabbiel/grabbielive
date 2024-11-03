@@ -27,10 +27,10 @@ jobs:
         ssh-keyscan $VM_IP >> ~/.ssh/known_hosts
         
         # Copy files to VM
-        scp server.cpp $VM_USER@$VM_IP:/repo/server/
+        scp -i ~/.ssh/id_rsa server.cpp $VM_USER@$VM_IP:/repo/server/
         
         # SSH commands to rebuild and restart service
-        ssh $VM_USER@$VM_IP '
+        ssh -i ~/.ssh/id_rsa $VM_USER@$VM_IP '
           cd /repo/server && \
           sudo g++ -std=c++11 -o server server.cpp -lssl -lcrypto -pthread -lsystemd && \
           sudo systemctl restart grabbiel-server
