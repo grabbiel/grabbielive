@@ -32,6 +32,6 @@ jobs:
         # SSH commands to rebuild and restart service
         ssh -i ~/.ssh/id_rsa $VM_USER@$VM_IP '
           cd /repo/server && \
-          sudo g++ -std=c++11 -o server server.cpp -lssl -lcrypto -pthread -lsystemd && \
+          sudo g++ -std=c++11 -o server server.cpp -lssl -lcrypto -pthread && \
           sudo systemctl restart grabbiel-server
         '
