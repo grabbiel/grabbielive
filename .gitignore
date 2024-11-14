@@ -35,3 +35,7 @@
 *.exe
 *.out
 *.app
+
+# Neovim LSP
+.clangd
+compile_commands.json

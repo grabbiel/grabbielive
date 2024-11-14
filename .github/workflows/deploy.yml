@@ -26,12 +26,18 @@ jobs:
         # Add VM host key to known hosts
         ssh-keyscan $VM_IP >> ~/.ssh/known_hosts
         
+        # Create directory if it does not exist
+        ssh -i ~/.ssh/id_rsa $VM_USER@$VM_IP 'mkdir -p /repo/server/include'
+
         # Copy files to VM
         scp -i ~/.ssh/id_rsa server.cpp $VM_USER@$VM_IP:/repo/server/
+        scp -i ~/.ssh/id_rsa Logger.hpp $VM_USER@$VM_IP:/repo/server/include
         
         # SSH commands to rebuild and restart service
         ssh -i ~/.ssh/id_rsa $VM_USER@$VM_IP '
           cd /repo/server && \
-          sudo g++ -std=c++11 -o server server.cpp -lssl -lcrypto -pthread && \
+          sudo g++ -std=c++11 -I./include -o server server.cpp -lssl -lcrypto -pthread && \
+          sudo mkdir -p /var/log/grabbiel-server && \
+          sudo chown ${USER}:${USER} /var/log/grabbiel-server && \
           sudo systemctl restart grabbiel-server
         '

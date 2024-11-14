@@ -11,6 +11,7 @@
 #include <string>
 #include <sys/socket.h>
 #include <unistd.h>
+#include "include/Logger.hpp"
 
 #define PORT 443
 #define BUFFER_SIZE 4096
@@ -26,8 +27,7 @@ bool is_allowed_client(const struct sockaddr_in &client_addr,
   bool origin_allowed =
       origin.empty() || origin.find(ALLOWED_DOMAIN) != std::string::npos;
 
-  printf("Connection attempt from IP: %s, Origin: %s\n", ip_str.c_str(),
-         origin.empty() ? "direct acess" : origin.c_str());
+  LOG_INFO("Connection attempt from IP: ", ip_str, ", Origin: ", origin.empty() ? "direct access" : origin);
 
   return origin_allowed;
 }
@@ -380,12 +380,11 @@ void handle_request(SSL *ssl, const char *request,
     response += "Connection: close\r\n\r\n";
     response += "Access denied: Unauthorized origin or IP address";
     SSL_write(ssl, response.c_str(), response.length());
-    printf("Blocked unauthorized request from %s\n",
-           inet_ntoa(client_addr.sin_addr));
+    LOG_WARNING("Blocked unauthorized request from ", inet_ntoa(client_addr.sin_addr));
     return;
   }
 
-  printf("%s\n", request);
+  LOG_DEBUG("Received request: ", request);
 
   if (req.find("OPTIONS") == 0) {
     std::string response = "HTTP/1.1 200 OK\r\n";
@@ -409,11 +408,17 @@ void handle_request(SSL *ssl, const char *request,
     response += "Connection: close\r\n\r\n";
     response += "404 - Endpoint not found";
     SSL_write(ssl, response.c_str(), response.length());
-    printf("Received non-matching request\n");
+    LOG_WARNING("Received non-matching request method");
   }
 }
 
 int main(int argc, char const *argv[]) {
+
+
+  Logger::getInstance().setLogFile("/var/log/grabbiel-server.log");
+  Logger::getInstance().setLogLevel(LogLevel::INFO);
+
+  LOG_INFO("Server starting initilization...");
 
   SSL_library_init();
   OpenSSL_add_all_algorithms();
@@ -432,17 +437,17 @@ int main(int argc, char const *argv[]) {
   char buffer[BUFFER_SIZE] = {0};
 
   if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-    perror("socket failed");
+    LOG_FATAL("Socket creation failed: ", strerror(errno));
     exit(EXIT_FAILURE);
   }
   if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
-    perror("setsockopt");
+    LOG_ERROR("Failed to set SO_REUSEADDR: ",strerror(errno));
     exit(EXIT_FAILURE);
   }
 
   // Set SO_REUSEPORT
   if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt))) {
-    perror("setsockopt");
+    LOG_ERROR("Failed to set SO_REUSEPORT: ", strerror(errno));
     exit(EXIT_FAILURE);
   }
   address.sin_family = AF_INET;
@@ -450,16 +455,16 @@ int main(int argc, char const *argv[]) {
   address.sin_port = htons(PORT);
 
   if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
-    perror("bind failed");
+    LOG_FATAL("Bind failed: ", strerror(errno));
     exit(EXIT_FAILURE);
   }
 
   if (listen(server_fd, 3) < 0) {
-    perror("listen");
+    LOG_FATAL("Listen failed: ", strerror(errno));
     exit(EXIT_FAILURE);
   }
 
-  printf("Server listening on port %d ... \n", PORT);
+  LOG_INFO("Server listening on port ", PORT);
 
   while (1) {
 
@@ -468,7 +473,7 @@ int main(int argc, char const *argv[]) {
 
     if ((new_socket = accept(server_fd, (struct sockaddr *)&client_addr,
                              &client_len)) < 0) {
-      perror("accept");
+      LOG_ERROR("Accept failed: ", strerror(errno));
       exit(EXIT_FAILURE);
     }
 
@@ -477,6 +482,7 @@ int main(int argc, char const *argv[]) {
     SSL_set_fd(ssl, new_socket);
 
     if (SSL_accept(ssl) <= 0) {
+      LOG_ERROR("SSL accept failed");
       ERR_print_errors_fp(stderr);
     } else {
       memset(buffer, 0, BUFFER_SIZE);
@@ -492,6 +498,8 @@ int main(int argc, char const *argv[]) {
     SSL_free(ssl);
     close(new_socket);
   }
+  
+  LOG_INFO("Server shutting down ...");
   SSL_CTX_free(ctx);
   close(server_fd);
   EVP_cleanup();
