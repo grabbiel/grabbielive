@@ -31,7 +31,7 @@ jobs:
 
         # Copy files to VM
         scp -i ~/.ssh/id_rsa server.cpp $VM_USER@$VM_IP:/repo/server/
-        scp -i ~/.ssh/id_rsa Logger.hpp $VM_USER@$VM_IP:/repo/server/include
+        scp -i ~/.ssh/id_rsa include/Logger.hpp $VM_USER@$VM_IP:/repo/server/include
         
         # SSH commands to rebuild and restart service
         ssh -i ~/.ssh/id_rsa $VM_USER@$VM_IP '
