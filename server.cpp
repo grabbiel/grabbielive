@@ -1,3 +1,4 @@
+#include "include/Logger.hpp"
 #include <arpa/inet.h>
 #include <cstdio>
 #include <cstdlib>
@@ -11,13 +12,11 @@
 #include <string>
 #include <sys/socket.h>
 #include <unistd.h>
-#include "include/Logger.hpp"
 
 #define PORT 443
 #define BUFFER_SIZE 4096
 #define ALLOWED_DOMAIN "grabbiel.com"
 
-// TODO: reduce logic
 bool is_allowed_client(const struct sockaddr_in &client_addr,
                        const std::string &origin) {
   char client_ip[INET_ADDRSTRLEN];
@@ -27,7 +26,8 @@ bool is_allowed_client(const struct sockaddr_in &client_addr,
   bool origin_allowed =
       origin.empty() || origin.find(ALLOWED_DOMAIN) != std::string::npos;
 
-  LOG_INFO("Connection attempt from IP: ", ip_str, ", Origin: ", origin.empty() ? "direct access" : origin);
+  LOG_INFO("Connection attempt from IP: ", ip_str,
+           ", Origin: ", origin.empty() ? "direct access" : origin);
 
   return origin_allowed;
 }
@@ -380,7 +380,8 @@ void handle_request(SSL *ssl, const char *request,
     response += "Connection: close\r\n\r\n";
     response += "Access denied: Unauthorized origin or IP address";
     SSL_write(ssl, response.c_str(), response.length());
-    LOG_WARNING("Blocked unauthorized request from ", inet_ntoa(client_addr.sin_addr));
+    LOG_WARNING("Blocked unauthorized request from ",
+                inet_ntoa(client_addr.sin_addr));
     return;
   }
 
@@ -414,7 +415,6 @@ void handle_request(SSL *ssl, const char *request,
 
 int main(int argc, char const *argv[]) {
 
-
   Logger::getInstance().setLogFile("/var/log/grabbiel-server.log");
   Logger::getInstance().setLogLevel(LogLevel::INFO);
 
@@ -441,7 +441,7 @@ int main(int argc, char const *argv[]) {
     exit(EXIT_FAILURE);
   }
   if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
-    LOG_ERROR("Failed to set SO_REUSEADDR: ",strerror(errno));
+    LOG_ERROR("Failed to set SO_REUSEADDR: ", strerror(errno));
     exit(EXIT_FAILURE);
   }
 
@@ -498,7 +498,7 @@ int main(int argc, char const *argv[]) {
     SSL_free(ssl);
     close(new_socket);
   }
-  
+
   LOG_INFO("Server shutting down ...");
   SSL_CTX_free(ctx);
   close(server_fd);
