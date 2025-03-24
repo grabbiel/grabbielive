@@ -36,7 +36,6 @@ jobs:
         ssh -i ~/.ssh/id_rsa $VM_USER@$VM_IP '
           cd /repo/server && \
           chmod +x setup_server.sh && \
-          sudo ./setup_server.sh && \
           sudo g++ -std=c++17 -I./include -o server server.cpp -lssl -lcrypto -pthread && \
           sudo mkdir -p /var/log/grabbiel-server && \
           sudo chown ${USER}:${USER} /var/log/grabbiel-server && \

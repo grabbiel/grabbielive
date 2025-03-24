@@ -13,7 +13,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#define PORT 8443
+#define PORT 443
 #define BUFFER_SIZE 4096
 #define ALLOWED_DOMAIN "grabbiel.com"
 
