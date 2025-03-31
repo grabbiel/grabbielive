@@ -33,29 +33,23 @@ jobs:
         scp -i ~/.ssh/id_rsa include/Logger.hpp $VM_USER@$VM_IP:/repo/server/include
         scp -i ~/.ssh/id_rsa setup_server.sh $VM_USER@$VM_IP:/repo/server
         
-        # SSH commands to rebuild and restart service with error handling
+        # SSH commands to inspect current server state before running setup
         ssh -i ~/.ssh/id_rsa $VM_USER@$VM_IP '
+          echo "============ Current System State ============"
+          echo "Checking for processes using port 8443:"
+          sudo lsof -i:8443 || echo "No process using port 8443"
+          
+          echo "Checking server processes:"
+          ps aux | grep server | grep -v grep || echo "No server processes found"
+          
+          echo "Checking service status:"
+          sudo systemctl status grabbiel-server || echo "Service not found"
+          sudo systemctl status apache2 || echo "Apache not found"
+          
+          echo "===========================================" 
+          
+          # Run setup script with debugging enabled
           cd /repo/server && \
           chmod +x setup_server.sh && \
-          
-          # Run the setup script
-          sudo ./setup_server.sh
-          
-          # Check if the services are running
-          if ! sudo systemctl is-active --quiet grabbiel-server; then
-            echo "Error: C++ server failed to start"
-            sudo systemctl status grabbiel-server
-            exit 1
-          fi
-          
-          if ! sudo systemctl is-active --quiet apache2; then
-            echo "Error: Apache server failed to start"
-            sudo systemctl status apache2
-            exit 1
-          fi
-          
-          # Show success message
-          echo "Deployment completed successfully"
-          echo "C++ server is running on port 8443"
-          echo "Apache is proxying requests from port 443 to 8443"
+          sudo bash -x ./setup_server.sh
         '

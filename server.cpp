@@ -525,12 +525,28 @@ void handle_request(SSL *ssl, const char *request,
 }
 
 int main(int argc, char const *argv[]) {
-
+  // Initialize logger
   Logger::getInstance().setLogFile("/var/log/grabbiel-server.log");
   Logger::getInstance().setLogLevel(LogLevel::INFO);
 
-  LOG_INFO("Server starting initilization...");
+  LOG_INFO("Server starting initialization...");
 
+  // Get port from environment or use default
+  int port = 8443; // Default port
+  const char *env_port = getenv("PORT");
+  if (env_port != nullptr) {
+    port = atoi(env_port);
+    if (port <= 0) {
+      LOG_ERROR("Invalid PORT value: ", env_port, ", using default 8443");
+      port = 8443;
+    }
+  }
+  LOG_INFO("Using port: ", port);
+
+  // Print current process ID for debugging
+  LOG_INFO("Process ID: ", getpid());
+
+  // Initialize OpenSSL
   SSL_library_init();
   OpenSSL_add_all_algorithms();
   SSL_load_error_strings();
@@ -541,7 +557,6 @@ int main(int argc, char const *argv[]) {
                     "/etc/letsencrypt/live/server.grabbiel.com/privkey.pem");
 
   int server_fd, new_socket;
-  ssize_t valread;
   struct sockaddr_in address;
   int opt = 1;
   socklen_t addrlen = sizeof(address);
@@ -551,6 +566,7 @@ int main(int argc, char const *argv[]) {
     LOG_FATAL("Socket creation failed: ", strerror(errno));
     exit(EXIT_FAILURE);
   }
+
   if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
     LOG_ERROR("Failed to set SO_REUSEADDR: ", strerror(errno));
     exit(EXIT_FAILURE);
@@ -561,22 +577,25 @@ int main(int argc, char const *argv[]) {
     LOG_ERROR("Failed to set SO_REUSEPORT: ", strerror(errno));
     exit(EXIT_FAILURE);
   }
+
   address.sin_family = AF_INET;
   address.sin_addr.s_addr = INADDR_ANY;
-
-  int port = 8443;
-  const char *env_port = getenv("PORT");
-  if (env_port != nullptr)
-    port = atoi(env_port);
-  LOG_INFO("Using port: ", port);
   address.sin_port = htons(port);
 
-  if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+  // Attempt to bind with better error logging
+  int bind_result =
+      bind(server_fd, (struct sockaddr *)&address, sizeof(address));
+  if (bind_result < 0) {
     LOG_FATAL("Bind failed: ", strerror(errno));
+
+    // Additional debugging
+    LOG_ERROR("Port in use check:");
+    system("ss -tulpn | grep 8443 >> /var/log/grabbiel-server.log");
+
     exit(EXIT_FAILURE);
   }
 
-  if (listen(server_fd, 3) < 0) {
+  if (listen(server_fd, 10) < 0) {
     LOG_FATAL("Listen failed: ", strerror(errno));
     exit(EXIT_FAILURE);
   }
@@ -584,14 +603,13 @@ int main(int argc, char const *argv[]) {
   LOG_INFO("Server listening on port ", port);
 
   while (1) {
-
     struct sockaddr_in client_addr;
     socklen_t client_len = sizeof(client_addr);
 
     if ((new_socket = accept(server_fd, (struct sockaddr *)&client_addr,
                              &client_len)) < 0) {
       LOG_ERROR("Accept failed: ", strerror(errno));
-      exit(EXIT_FAILURE);
+      continue; // Continue instead of exiting to keep server running
     }
 
     SSL *ssl = SSL_new(ctx);
@@ -607,6 +625,8 @@ int main(int argc, char const *argv[]) {
       if (bytes > 0) {
         buffer[bytes] = '\0';
         handle_request(ssl, buffer, client_addr);
+      } else {
+        LOG_ERROR("SSL_read failed: ", SSL_get_error(ssl, bytes));
       }
     }
 
@@ -615,7 +635,7 @@ int main(int argc, char const *argv[]) {
     close(new_socket);
   }
 
-  LOG_INFO("Server shutting down ...");
+  LOG_INFO("Server shutting down...");
   SSL_CTX_free(ctx);
   close(server_fd);
   EVP_cleanup();
