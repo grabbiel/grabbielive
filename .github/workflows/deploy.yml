@@ -3,14 +3,15 @@ name: Deploy C++ Server
 on:
   push:
     branches:
-      - main  # or your preferred branch
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
     
     - name: Deploy to VM
       env:
@@ -32,12 +33,29 @@ jobs:
         scp -i ~/.ssh/id_rsa include/Logger.hpp $VM_USER@$VM_IP:/repo/server/include
         scp -i ~/.ssh/id_rsa setup_server.sh $VM_USER@$VM_IP:/repo/server
         
-        # SSH commands to rebuild and restart service
+        # SSH commands to rebuild and restart service with error handling
         ssh -i ~/.ssh/id_rsa $VM_USER@$VM_IP '
           cd /repo/server && \
           chmod +x setup_server.sh && \
-          sudo g++ -std=c++17 -I./include -o server server.cpp -lssl -lcrypto -pthread && \
-          sudo mkdir -p /var/log/grabbiel-server && \
-          sudo chown ${USER}:${USER} /var/log/grabbiel-server && \
-          sudo systemctl restart grabbiel-server
+          
+          # Run the setup script
+          sudo ./setup_server.sh
+          
+          # Check if the services are running
+          if ! sudo systemctl is-active --quiet grabbiel-server; then
+            echo "Error: C++ server failed to start"
+            sudo systemctl status grabbiel-server
+            exit 1
+          fi
+          
+          if ! sudo systemctl is-active --quiet apache2; then
+            echo "Error: Apache server failed to start"
+            sudo systemctl status apache2
+            exit 1
+          fi
+          
+          # Show success message
+          echo "Deployment completed successfully"
+          echo "C++ server is running on port 8443"
+          echo "Apache is proxying requests from port 443 to 8443"
         '
