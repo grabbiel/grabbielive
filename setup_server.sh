@@ -50,14 +50,11 @@ sudo tee /etc/apache2/sites-available/server.grabbiel.com.conf >/dev/null <<EOF
     SSLCertificateKeyFile /etc/letsencrypt/live/server.grabbiel.com/privkey.pem
 
     ProxyPreserveHost On
-    ProxyPass / https://server.grabbiel.com:8444/
-    ProxyPassReverse / https://server.grabbiel.com:8444/
+    ProxyPass / https://localhost:8444/
+    ProxyPassReverse / https://localhost:8444/
 
     SSLProxyEngine On
-    SSLProxyVerify require
-    SSLProxyCheckPeerCN on
-    SSLProxyCheckPeerName on
-    SSLProxyCheckPeerExpire on
+    SSLProxyVerify none
 
     RequestHeader set X-Forwarded-Proto "https"
     RequestHeader set X-Forwarded-For %{REMOTE_ADDR}s
