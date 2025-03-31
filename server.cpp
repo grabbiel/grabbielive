@@ -70,224 +70,336 @@ void configure_context(SSL_CTX *ctx, const char *cert_path,
 }
 
 void handle_get_shop(SSL *ssl, std::string &response) {
-  response +=
+  std::string content = "";
+  content =
       "<div id='text-space' class='content' style='background-color: pink; "
       "width: 90vw; height: 120vh;'>SHOP IS HERE</div>";
+  response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+  response += "Connection: close\r\n\r\n";
+  response += content;
   SSL_write(ssl, response.c_str(), response.length());
   printf("Processed POST request to /shop\n");
 }
 void handle_get_donate(SSL *ssl, std::string &response) {
-  response +=
-      "<div id='text-space' class='content' style='background-color: yellow; "
+  std::string content = "";
+  content =
+      "<div id='text-space' class='content' style='background-color: pink; "
       "width: 90vw; height: 120vh;'>DONATIONS ARE HERE</div>";
+  response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+  response += "Connection: close\r\n\r\n";
+  response += content;
   SSL_write(ssl, response.c_str(), response.length());
-  printf("Processed POST request to /donate\n");
+  printf("Processed POST request to /shop\n");
 }
 void handle_get_assets(SSL *ssl, std::string &response) {
-  response +=
-      "<div id='text-space' class='content' style='background-color: blue; "
+  std::string content = "";
+  content =
+      "<div id='text-space' class='content' style='background-color: pink; "
       "width: 90vw; height: 120vh;'>ASSETS ARE HERE</div>";
+  response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+  response += "Connection: close\r\n\r\n";
+  response += content;
   SSL_write(ssl, response.c_str(), response.length());
-  printf("Processed POST request to /assets\n");
+  printf("Processed POST request to /shop\n");
 }
 
 void handle_get_forum(SSL *ssl, std::string &response) {
-  response +=
-      "<div id='text-space' class='content' style='background-color: black; "
+  std::string content = "";
+  content =
+      "<div id='text-space' class='content' style='background-color: pink; "
       "width: 90vw; height: 120vh;'>FORUM IS HERE</div>";
+  response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+  response += "Connection: close\r\n\r\n";
+  response += content;
   SSL_write(ssl, response.c_str(), response.length());
-  printf("Processed POST request to /forum\n");
+  printf("Processed POST request to /shop\n");
 }
 
 void handle_get_updates(SSL *ssl, std::string &response) {
-  response +=
-      "<div id='text-space' class='content' style='background-color: brown; "
+  std::string content = "";
+  content =
+      "<div id='text-space' class='content' style='background-color: pink; "
       "width: 90vw; height: 120vh;'>UPDATES ARE HERE</div>";
+  response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+  response += "Connection: close\r\n\r\n";
+  response += content;
   SSL_write(ssl, response.c_str(), response.length());
-  printf("Processed POST request to /updates\n");
+  printf("Processed POST request to /shop\n");
 }
 
 void handle_get_me(SSL *ssl, std::string &response) {
-  response +=
-      "<div id='text-space' class='content' style='background-color: grey; "
-      "width: 90vw; height: 120vh;'>ME ITS ME IM HERE</div>";
+  std::string content = "";
+  content =
+      "<div id='text-space' class='content' style='background-color: pink; "
+      "width: 90vw; height: 120vh;'>ME IS HERE</div>";
+  response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+  response += "Connection: close\r\n\r\n";
+  response += content;
   SSL_write(ssl, response.c_str(), response.length());
-  printf("Processed POST request to /me\n");
+  printf("Processed POST request to /shop\n");
 }
 
 void handle_get_photos(SSL *ssl, std::string &response) {
-  response +=
-      "<div id='text-space' class='content' style='background-color: green; "
+  std::string content = "";
+  content =
+      "<div id='text-space' class='content' style='background-color: pink; "
       "width: 90vw; height: 120vh;'>PHOTOS ARE HERE</div>";
+  response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+  response += "Connection: close\r\n\r\n";
+  response += content;
   SSL_write(ssl, response.c_str(), response.length());
-  printf("Processed POST request to /photos\n");
+  printf("Processed POST request to /shop\n");
 }
 
 void handle_get_links(SSL *ssl, std::string &response) {
-  response += "<div id='text-space' class='content' style='background-color: "
-              "light-blue; "
-              "width: 90vw; height: 120vh;'>LINKS ARE HERE</div>";
+  std::string content = "";
+  content =
+      "<div id='text-space' class='content' style='background-color: pink; "
+      "width: 90vw; height: 120vh;'>LINKS ARE HERE</div>";
+  response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+  response += "Connection: close\r\n\r\n";
+  response += content;
   SSL_write(ssl, response.c_str(), response.length());
-  printf("Processed POST request to /links\n");
+  printf("Processed POST request to /shop\n");
 }
 
 void handle_get_news(SSL *ssl, std::string &response) {
-  response += "<div id='text-space' class='content' style='background-color: "
-              "orange; "
-              "width: 90vw; height: 120vh;'>NEWS ARE HERE</div>";
+  std::string content = "";
+  content =
+      "<div id='text-space' class='content' style='background-color: pink; "
+      "width: 90vw; height: 120vh;'>NEWS ARE HERE</div>";
+  response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+  response += "Connection: close\r\n\r\n";
+  response += content;
   SSL_write(ssl, response.c_str(), response.length());
-  printf("Processed POST request to /news\n");
+  printf("Processed POST request to /shop\n");
 }
 
 void handle_get_videos(SSL *ssl, std::string &response) {
-  response += "<div id='text-space' class='content' style='background-color: "
-              "white; "
-              "width: 90vw; height: 120vh;'>VIDEOS ARE HERE</div>";
+  std::string content = "";
+  content =
+      "<div id='text-space' class='content' style='background-color: pink; "
+      "width: 90vw; height: 120vh;'>VIDEOS ARE HERE</div>";
+  response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+  response += "Connection: close\r\n\r\n";
+  response += content;
   SSL_write(ssl, response.c_str(), response.length());
-  printf("Processed POST request to /videos\n");
+  printf("Processed POST request to /shop\n");
 }
 
 void handle_get_read(SSL *ssl, std::string &response) {
-  response += "<div id='text-space' class='content' style='background-color: "
-              "bisque; "
-              "width: 90vw; height: 120vh;'>READ ARE HERE</div>";
+  std::string content = "";
+  content =
+      "<div id='text-space' class='content' style='background-color: pink; "
+      "width: 90vw; height: 120vh;'>READ IS HERE</div>";
+  response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+  response += "Connection: close\r\n\r\n";
+  response += content;
   SSL_write(ssl, response.c_str(), response.length());
-  printf("Processed POST request to /read\n");
+  printf("Processed POST request to /shop\n");
 }
 
 void handle_get_github(SSL *ssl, std::string &response) {
-  response += "<div id='text-space' class='content' style='background-color: "
-              "coral; "
-              "width: 90vw; height: 120vh;'>GITHUB ARE HERE</div>";
+  std::string content = "";
+  content =
+      "<div id='text-space' class='content' style='background-color: pink; "
+      "width: 90vw; height: 120vh;'>GITHUB IS HERE</div>";
+  response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+  response += "Connection: close\r\n\r\n";
+  response += content;
   SSL_write(ssl, response.c_str(), response.length());
-  printf("Processed POST request to /github\n");
+  printf("Processed POST request to /shop\n");
 }
 
 void handle_get_food(SSL *ssl, std::string &response) {
-  response += "<div id='text-space' class='content' style='background-color: "
-              "crimson; "
-              "width: 90vw; height: 120vh;'>FOOD ARE HERE</div>";
+  std::string content = "";
+  content =
+      "<div id='text-space' class='content' style='background-color: pink; "
+      "width: 90vw; height: 120vh;'>FOOD IS HERE</div>";
+  response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+  response += "Connection: close\r\n\r\n";
+  response += content;
   SSL_write(ssl, response.c_str(), response.length());
-  printf("Processed POST request to /food\n");
+  printf("Processed POST request to /shop\n");
 }
 
 void handle_get_music(SSL *ssl, std::string &response) {
-  response += "<div id='text-space' class='content' style='background-color: "
-              "gainsboro; "
-              "width: 90vw; height: 120vh;'>MUSIC ARE HERE</div>";
+  std::string content = "";
+  content =
+      "<div id='text-space' class='content' style='background-color: pink; "
+      "width: 90vw; height: 120vh;'>MUSIC IS HERE</div>";
+  response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+  response += "Connection: close\r\n\r\n";
+  response += content;
   SSL_write(ssl, response.c_str(), response.length());
-  printf("Processed POST request to /music\n");
+  printf("Processed POST request to /shop\n");
 }
 
 void handle_get_renders(SSL *ssl, std::string &response) {
-  response += "<div id='text-space' class='content' style='background-color: "
-              "khaki; "
-              "width: 90vw; height: 120vh;'>RENDERS ARE HERE</div>";
+  std::string content = "";
+  content =
+      "<div id='text-space' class='content' style='background-color: pink; "
+      "width: 90vw; height: 120vh;'>RENDERS ARE HERE</div>";
+  response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+  response += "Connection: close\r\n\r\n";
+  response += content;
   SSL_write(ssl, response.c_str(), response.length());
-  printf("Processed POST request to /renders\n");
+  printf("Processed POST request to /shop\n");
 }
 
 void handle_get_writing(SSL *ssl, std::string &response) {
-  response += "<div id='text-space' class='content' style='background-color: "
-              "indigo; "
-              "width: 90vw; height: 120vh;'>WRITING ARE HERE</div>";
+  std::string content = "";
+  content =
+      "<div id='text-space' class='content' style='background-color: pink; "
+      "width: 90vw; height: 120vh;'>WRITING IS HERE</div>";
+  response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+  response += "Connection: close\r\n\r\n";
+  response += content;
   SSL_write(ssl, response.c_str(), response.length());
-  printf("Processed POST request to /writing\n");
+  printf("Processed POST request to /shop\n");
 }
 
 void handle_get_vynils(SSL *ssl, std::string &response) {
-  response += "<div id='text-space' class='content' style='background-color: "
-              "lavender; "
-              "width: 90vw; height: 120vh;'>VYNILS ARE HERE</div>";
+  std::string content = "";
+  content =
+      "<div id='text-space' class='content' style='background-color: pink; "
+      "width: 90vw; height: 120vh;'>VINYLS IS HERE</div>";
+  response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+  response += "Connection: close\r\n\r\n";
+  response += content;
   SSL_write(ssl, response.c_str(), response.length());
-  printf("Processed POST request to /vynils\n");
+  printf("Processed POST request to /shop\n");
 }
 
 void handle_get_travel(SSL *ssl, std::string &response) {
-  response += "<div id='text-space' class='content' style='background-color: "
-              "linen; "
-              "width: 90vw; height: 120vh;'>TRAVEL ARE HERE</div>";
+  std::string content = "";
+  content =
+      "<div id='text-space' class='content' style='background-color: pink; "
+      "width: 90vw; height: 120vh;'>TRAVEL IS HERE</div>";
+  response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+  response += "Connection: close\r\n\r\n";
+  response += content;
   SSL_write(ssl, response.c_str(), response.length());
-  printf("Processed POST request to /travel\n");
+  printf("Processed POST request to /shop\n");
 }
 
 void handle_get_fishing(SSL *ssl, std::string &response) {
-  response += "<div id='text-space' class='content' style='background-color: "
-              "moccasin; "
-              "width: 90vw; height: 120vh;'>FISHING ARE HERE</div>";
+  std::string content = "";
+  content =
+      "<div id='text-space' class='content' style='background-color: pink; "
+      "width: 90vw; height: 120vh;'>FISHING IS HERE</div>";
+  response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+  response += "Connection: close\r\n\r\n";
+  response += content;
   SSL_write(ssl, response.c_str(), response.length());
-  printf("Processed POST request to /fishing\n");
+  printf("Processed POST request to /shop\n");
 }
 
 void handle_get_scuba(SSL *ssl, std::string &response) {
-  response += "<div id='text-space' class='content' style='background-color: "
-              "orchid; "
-              "width: 90vw; height: 120vh;'>SCUBA ARE HERE</div>";
+  std::string content = "";
+  content =
+      "<div id='text-space' class='content' style='background-color: pink; "
+      "width: 90vw; height: 120vh;'>SCUBA IS HERE</div>";
+  response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+  response += "Connection: close\r\n\r\n";
+  response += content;
   SSL_write(ssl, response.c_str(), response.length());
-  printf("Processed POST request to /scuba\n");
+  printf("Processed POST request to /shop\n");
 }
 
 void handle_get_foreign(SSL *ssl, std::string &response) {
-  response += "<div id='text-space' class='content' style='background-color: "
-              "peru; "
-              "width: 90vw; height: 120vh;'>FOREIGN ARE HERE</div>";
+  std::string content = "";
+  content =
+      "<div id='text-space' class='content' style='background-color: pink; "
+      "width: 90vw; height: 120vh;'>FOREIGN IS HERE</div>";
+  response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+  response += "Connection: close\r\n\r\n";
+  response += content;
   SSL_write(ssl, response.c_str(), response.length());
-  printf("Processed POST request to /foreign\n");
+  printf("Processed POST request to /shop\n");
 }
 
 void handle_get_leetcode(SSL *ssl, std::string &response) {
-  response += "<div id='text-space' class='content' style='background-color: "
-              "plum; "
-              "width: 90vw; height: 120vh;'>LEETCODE ARE HERE</div>";
+  std::string content = "";
+  content =
+      "<div id='text-space' class='content' style='background-color: pink; "
+      "width: 90vw; height: 120vh;'>LEETCODE IS HERE</div>";
+  response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+  response += "Connection: close\r\n\r\n";
+  response += content;
   SSL_write(ssl, response.c_str(), response.length());
-  printf("Processed POST request to /leetcode\n");
+  printf("Processed POST request to /shop\n");
 }
 
 void handle_get_pretty(SSL *ssl, std::string &response) {
-  response += "<div id='text-space' class='content' style='background-color: "
-              "salmon; "
-              "width: 90vw; height: 120vh;'>PRETTY ARE HERE</div>";
+  std::string content = "";
+  content =
+      "<div id='text-space' class='content' style='background-color: pink; "
+      "width: 90vw; height: 120vh;'>PRETTY IS HERE</div>";
+  response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+  response += "Connection: close\r\n\r\n";
+  response += content;
   SSL_write(ssl, response.c_str(), response.length());
-  printf("Processed POST request to /pretty\n");
+  printf("Processed POST request to /shop\n");
 }
 
 void handle_get_robots(SSL *ssl, std::string &response) {
-  response += "<div id='text-space' class='content' style='background-color: "
-              "snow; "
-              "width: 90vw; height: 120vh;'>ROBOTS ARE HERE</div>";
+  std::string content = "";
+  content =
+      "<div id='text-space' class='content' style='background-color: pink; "
+      "width: 90vw; height: 120vh;'>ROBOTS IS HERE</div>";
+  response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+  response += "Connection: close\r\n\r\n";
+  response += content;
   SSL_write(ssl, response.c_str(), response.length());
-  printf("Processed POST request to /robots\n");
+  printf("Processed POST request to /shop\n");
 }
 
 void handle_get_stats(SSL *ssl, std::string &response) {
-  response += "<div id='text-space' class='content' style='background-color: "
-              "teal; "
-              "width: 90vw; height: 120vh;'>STATS ARE HERE</div>";
+  std::string content = "";
+  content =
+      "<div id='text-space' class='content' style='background-color: pink; "
+      "width: 90vw; height: 120vh;'>STATS IS HERE</div>";
+  response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+  response += "Connection: close\r\n\r\n";
+  response += content;
   SSL_write(ssl, response.c_str(), response.length());
-  printf("Processed POST request to /stats\n");
+  printf("Processed POST request to /shop\n");
 }
 
 void handle_get_wishlist(SSL *ssl, std::string &response) {
-  response += "<div id='text-space' class='content' style='background-color: "
-              "thistle; "
-              "width: 90vw; height: 120vh;'>WISHLIST ARE HERE</div>";
+  std::string content = "";
+  content =
+      "<div id='text-space' class='content' style='background-color: pink; "
+      "width: 90vw; height: 120vh;'>WISHLIST IS HERE</div>";
+  response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+  response += "Connection: close\r\n\r\n";
+  response += content;
   SSL_write(ssl, response.c_str(), response.length());
-  printf("Processed POST request to /wishlist\n");
+  printf("Processed POST request to /shop\n");
 }
 
 void handle_get_sections(SSL *ssl, std::string &response) {
-  response += "<div id='text-space' class='content' style='background-color: "
-              "tan; "
-              "width: 90vw; height: 120vh;'>SECTIONS ARE HERE</div>";
+  std::string content = "";
+  content =
+      "<div id='text-space' class='content' style='background-color: pink; "
+      "width: 90vw; height: 120vh;'>SECTIONS ARE HERE</div>";
+  response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+  response += "Connection: close\r\n\r\n";
+  response += content;
   SSL_write(ssl, response.c_str(), response.length());
-  printf("Processed POST request to /sections\n");
+  printf("Processed POST request to /shop\n");
 }
 void handle_get_anime(SSL *ssl, std::string &response) {
-  response += "<div id='text-space' class='content' style='background-color: "
-              "cornsilk; "
-              "width: 90vw; height: 120vh;'>ANIME ARE HERE</div>";
+  std::string content = "";
+  content =
+      "<div id='text-space' class='content' style='background-color: pink; "
+      "width: 90vw; height: 120vh;'>ANIME IS HERE</div>";
+  response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+  response += "Connection: close\r\n\r\n";
+  response += content;
   SSL_write(ssl, response.c_str(), response.length());
-  printf("Processed POST request to /anime\n");
+  printf("Processed POST request to /shop\n");
 }
 
 void handle_get(SSL *ssl, const std::string &req) {
@@ -303,7 +415,6 @@ void handle_get(SSL *ssl, const std::string &req) {
   response += "Access-Control-Allow-Methods: POST, GET, OPTIONS\r\n";
   response += "Access-Control-Allow-Headers: Content-Type, X-Requested-With, "
               "HX-Request, HX-Trigger, HX-Target, HX-Current-URL\r\n";
-  response += "Connection: close\r\n\r\n";
 
   if (path == "/shop") {
     handle_get_shop(ssl, response);
@@ -366,6 +477,7 @@ void handle_get(SSL *ssl, const std::string &req) {
   } else if (path == "/scuba") {
     handle_get_scuba(ssl, response);
   }
+  LOG_INFO("Sent response for path: ", path, ", length: ", response.length());
 }
 
 void handle_request(SSL *ssl, const char *request,
