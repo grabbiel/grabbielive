@@ -21,6 +21,9 @@ WorkingDirectory=/repo/server
 ExecStart=/repo/server/server
 Restart=on-failure
 User=fcruzado22
+RestartSec=3
+StartLimitBurst=10
+StartLimitIntervalSec=60
 
 [Install]
 WantedBy=multi-user.target
