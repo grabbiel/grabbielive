@@ -588,7 +588,6 @@ int main(int argc, char const *argv[]) {
   if (bind_result < 0) {
     LOG_FATAL("Bind failed: ", strerror(errno));
 
-    // Additional debugging
     LOG_ERROR("Port in use check:");
     system("ss -tulpn | grep 8444 >> /var/log/grabbiel-server.log");
 
