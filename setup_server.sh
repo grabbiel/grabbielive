@@ -235,3 +235,39 @@ else
 fi
 
 echo "Setup complete! C++ server is running on port 8444 and Apache is configured with proper CORS headers."
+
+echo "========== Setting up Apache Reverse Proxy =========="
+
+# Install Apache and required modules
+sudo apt update
+sudo apt install -y apache2
+sudo a2enmod ssl proxy proxy_http headers
+
+# Create the reverse proxy config
+cat <<EOF | sudo tee /etc/apache2/sites-available/server.grabbiel.com.conf
+<VirtualHost *:443>
+    ServerName server.grabbiel.com
+
+    SSLEngine on
+    SSLCertificateFile /etc/letsencrypt/live/server.grabbiel.com/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/server.grabbiel.com/privkey.pem
+
+    ProxyPreserveHost On
+    ProxyPass / https://localhost:8444/
+    ProxyPassReverse / https://localhost:8444/
+
+    RequestHeader set X-Forwarded-Proto "https"
+    RequestHeader set X-Forwarded-For %{REMOTE_ADDR}s
+</VirtualHost>
+EOF
+
+# Enable the new site
+sudo a2ensite server.grabbiel.com.conf
+
+# Reload Apache to apply changes
+sudo systemctl reload apache2
+
+# Enable Apache to run at boot
+sudo systemctl enable apache2
+
+echo "========== Apache Reverse Proxy Configured =========="
