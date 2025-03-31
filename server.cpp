@@ -406,12 +406,14 @@ void handle_get(SSL *ssl, const std::string &req) {
   size_t path_end = req.find(" ", path_start);
   std::string path = req.substr(path_start, path_end - path_start);
 
+  LOG_INFO("Processing GET request for path: ", path);
+
   std::string response = "HTTP/1.1 200 OK\r\n";
   response += "Content-Type: text/html\r\n";
   response += "Access-Control-Allow-Origin: https://";
   response += ALLOWED_DOMAIN;
   response += "\r\n";
-  response += "Access-Control-Allow-Methods: POST, GET, OPTIONS\r\n";
+  response += "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n";
   response += "Access-Control-Allow-Headers: Content-Type, X-Requested-With, "
               "HX-Request, HX-Trigger, HX-Target, HX-Current-URL\r\n";
 
@@ -503,13 +505,15 @@ void handle_request(SSL *ssl, const char *request,
     response += "Access-Control-Allow-Origin: https://";
     response += ALLOWED_DOMAIN;
     response += "\r\n";
-    response += "Access-Control-Allow-Methods: POST, GET, OPTIONS\r\n";
+    response += "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n";
     response += "Access-Control-Allow-Headers: Content-Type, X-Requested-With, "
                 "HX-Request, HX-Trigger, HX-Target, HX-Current-URL\r\n";
     response += "Access-Control-Max-Age: 86400\r\n"; // 24 hours
     response += "Content-Length: 0\r\n";
+    response += "Connection: keep-alive\r\n";
     response += "\r\n";
     SSL_write(ssl, response.c_str(), response.length());
+    LOG_INFO("Responded to OPTIONS request with CORS headers");
     return;
   }
   if (req.find("GET") == 0) {
@@ -517,6 +521,10 @@ void handle_request(SSL *ssl, const char *request,
   } else {
     std::string response = "HTTP/1.1 404 Not Found\r\n";
     response += "Content-Type: text/plain\r\n";
+    response += "Access-Control-Allow-Origin: https://grabbiel.com\r\n";
+    response += "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n";
+    response += "Access-Control-Allow-Headers: Content-Type, X-Requested-With, "
+                "HX-Request, HX-Trigger, HX-Target, HX-Current-URL\r\n";
     response += "Connection: close\r\n\r\n";
     response += "404 - Endpoint not found";
     SSL_write(ssl, response.c_str(), response.length());
@@ -588,6 +596,7 @@ int main(int argc, char const *argv[]) {
   if (bind_result < 0) {
     LOG_FATAL("Bind failed: ", strerror(errno));
 
+    // Additional debugging
     LOG_ERROR("Port in use check:");
     system("ss -tulpn | grep 8444 >> /var/log/grabbiel-server.log");
 
