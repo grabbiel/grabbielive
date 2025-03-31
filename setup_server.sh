@@ -1,32 +1,56 @@
 #!/bin/bash
+# setup_server.sh
 set -e # Exit on any error
 
 echo "Setting up Grabbiel Server environment..."
 
 # Determine what's using port 8443 and 80/443
 echo "Checking for processes using required ports..."
-PORT_8443_PID=$(sudo netstat -tulpn | grep ":8443" | awk '{print $7}' | cut -d'/' -f1)
-PORT_80_PID=$(sudo netstat -tulpn | grep ":80" | awk '{print $7}' | cut -d'/' -f1)
-PORT_443_PID=$(sudo netstat -tulpn | grep ":443" | awk '{print $7}' | cut -d'/' -f1)
+PORT_8443_PIDS=$(sudo lsof -i:8443 -t || true)
+PORT_80_PIDS=$(sudo lsof -i:80 -t || true)
+PORT_443_PIDS=$(sudo lsof -i:443 -t || true)
 
-# Stop processes if they exist
-if [ ! -z "$PORT_8443_PID" ]; then
-  echo "Process $PORT_8443_PID is using port 8443. Stopping..."
-  sudo kill -15 $PORT_8443_PID || true
+# Function to kill process and verify it's gone
+kill_process() {
+  local pid=$1
+  echo "Stopping process $pid..."
+  sudo kill -15 $pid 2>/dev/null || true
   sleep 2
-  # If process still exists, force kill
-  if ps -p $PORT_8443_PID >/dev/null; then
-    sudo kill -9 $PORT_8443_PID || true
+  if ps -p $pid >/dev/null 2>&1; then
+    echo "Process $pid still running, force killing..."
+    sudo kill -9 $pid 2>/dev/null || true
+    sleep 1
   fi
+}
+
+# Stop the C++ server service first if it exists
+echo "Stopping and removing existing grabbiel-server service..."
+sudo systemctl stop grabbiel-server 2>/dev/null || true
+sudo systemctl disable grabbiel-server 2>/dev/null || true
+
+# Find and kill any process named 'server' in /repo/server
+echo "Checking for any running server processes..."
+SERVER_PIDS=$(ps aux | grep "/repo/server/server" | grep -v grep | awk '{print $2}' || true)
+if [ ! -z "$SERVER_PIDS" ]; then
+  for pid in $SERVER_PIDS; do
+    kill_process $pid
+  done
 fi
 
-# Stop Apache if it's running
-sudo systemctl stop apache2 || true
+# Kill processes using ports
+if [ ! -z "$PORT_8443_PIDS" ]; then
+  for pid in $PORT_8443_PIDS; do
+    kill_process $pid
+  done
+fi
 
-# Clean up any existing service
-echo "Stopping and removing existing grabbiel-server service..."
-sudo systemctl stop grabbiel-server || true
-sudo systemctl disable grabbiel-server || true
+# Final check - make sure port 8443 is free
+echo "Verifying port 8443 is free..."
+if [ ! -z "$(sudo lsof -i:8443 -t 2>/dev/null)" ]; then
+  echo "ERROR: Port 8443 is still in use after cleanup attempts!"
+  sudo lsof -i:8443
+  exit 1
+fi
 
 # Update packages
 echo "Updating packages..."
@@ -35,7 +59,14 @@ sudo apt install -y apache2 openssl libssl-dev g++ make
 
 # Configure Apache
 echo "Configuring Apache..."
-sudo a2enmod ssl rewrite proxy proxy_http proxy_https headers
+sudo a2enmod ssl || true
+sudo a2enmod rewrite || true
+sudo a2enmod proxy || true
+sudo a2enmod proxy_http || true
+sudo a2enmod headers || true
+
+# Try to enable proxy_https if it exists (might not on some systems)
+sudo a2enmod proxy_https 2>/dev/null || echo "Note: proxy_https module not available, continuing with proxy_http..."
 
 # Create Apache config for main site
 echo "Creating Apache configuration..."
@@ -110,7 +141,7 @@ sudo chown -R $USER:$USER /var/www/grabbiel.com
 # Enable sites
 sudo a2ensite grabbiel.com.conf
 sudo a2ensite server.grabbiel.com.conf
-sudo a2dissite 000-default.conf
+sudo a2dissite 000-default.conf || true
 
 # Setup C++ server service
 echo "Setting up C++ server service..."
@@ -122,10 +153,11 @@ After=network.target
 [Service]
 ExecStart=/repo/server/server
 WorkingDirectory=/repo/server
-Restart=always
+Restart=on-failure
 User=root
 Group=root
 Environment=PORT=8443
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
@@ -147,13 +179,42 @@ echo "Restarting services..."
 sudo systemctl daemon-reload
 sudo systemctl enable grabbiel-server
 sudo systemctl restart grabbiel-server
-sudo systemctl restart apache2
+
+# Stop Apache if it's running on port 80 or 443
+if systemctl is-active --quiet apache2; then
+  echo "Stopping Apache to free up ports..."
+  sudo systemctl stop apache2
+  sleep 2
+fi
+
+# Start Apache
+echo "Starting Apache..."
+sudo systemctl start apache2
 
 # Verify services are running
 echo "Verifying services..."
 sleep 2
-sudo systemctl status grabbiel-server --no-pager
-sudo systemctl status apache2 --no-pager
+
+# Check C++ server
+if sudo systemctl is-active --quiet grabbiel-server; then
+  echo "✅ C++ server is running"
+else
+  echo "❌ C++ server failed to start"
+  sudo systemctl status grabbiel-server
+  exit 1
+fi
+
+# Check Apache
+if sudo systemctl is-active --quiet apache2; then
+  echo "✅ Apache is running"
+else
+  echo "❌ Apache failed to start"
+  sudo systemctl status apache2
+  exit 1
+fi
+
+# Verify ports
+echo "Checking port usage..."
 sudo netstat -tulpn | grep -E ':(80|443|8443)'
 
 echo "Setup complete!"
