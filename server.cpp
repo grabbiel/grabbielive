@@ -13,7 +13,6 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#define PORT 443
 #define BUFFER_SIZE 4096
 #define ALLOWED_DOMAIN "grabbiel.com"
 
@@ -564,7 +563,13 @@ int main(int argc, char const *argv[]) {
   }
   address.sin_family = AF_INET;
   address.sin_addr.s_addr = INADDR_ANY;
-  address.sin_port = htons(PORT);
+
+  int port = 8443;
+  const char *env_port = getenv("PORT");
+  if (env_port != nullptr)
+    port = atoi(env_port);
+  LOG_INFO("Using port: ", port);
+  address.sin_port = htons(port);
 
   if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
     LOG_FATAL("Bind failed: ", strerror(errno));
@@ -576,7 +581,7 @@ int main(int argc, char const *argv[]) {
     exit(EXIT_FAILURE);
   }
 
-  LOG_INFO("Server listening on port ", PORT);
+  LOG_INFO("Server listening on port ", port);
 
   while (1) {
 
