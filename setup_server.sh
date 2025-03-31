@@ -4,24 +4,23 @@ set -e # Exit on any error
 
 echo "Setting up Grabbiel Server environment..."
 
-# Determine what's using port 8443 and 80/443
-echo "Checking for processes using required ports..."
-PORT_8443_PIDS=$(sudo lsof -i:8443 -t || true)
-PORT_80_PIDS=$(sudo lsof -i:80 -t || true)
-PORT_443_PIDS=$(sudo lsof -i:443 -t || true)
+# Install required tools first
+echo "Installing required tools..."
+sudo apt update
+sudo apt install -y lsof
 
-# Function to kill process and verify it's gone
-kill_process() {
-  local pid=$1
-  echo "Stopping process $pid..."
-  sudo kill -15 $pid 2>/dev/null || true
+# Check for conflicting API server
+echo "Checking for conflicting api_server process..."
+API_SERVER_PID=$(ps aux | grep "/repo/api-server/api_server" | grep -v grep | awk '{print $2}' || true)
+if [ ! -z "$API_SERVER_PID" ]; then
+  echo "Found conflicting api_server process (PID: $API_SERVER_PID). Stopping..."
+  sudo kill -15 $API_SERVER_PID || true
   sleep 2
-  if ps -p $pid >/dev/null 2>&1; then
-    echo "Process $pid still running, force killing..."
-    sudo kill -9 $pid 2>/dev/null || true
-    sleep 1
+  # If still running, force kill
+  if ps -p $API_SERVER_PID >/dev/null 2>&1; then
+    sudo kill -9 $API_SERVER_PID || true
   fi
-}
+fi
 
 # Stop the C++ server service first if it exists
 echo "Stopping and removing existing grabbiel-server service..."
@@ -33,28 +32,14 @@ echo "Checking for any running server processes..."
 SERVER_PIDS=$(ps aux | grep "/repo/server/server" | grep -v grep | awk '{print $2}' || true)
 if [ ! -z "$SERVER_PIDS" ]; then
   for pid in $SERVER_PIDS; do
-    kill_process $pid
+    echo "Stopping process $pid..."
+    sudo kill -15 $pid 2>/dev/null || true
+    sleep 1
   done
-fi
-
-# Kill processes using ports
-if [ ! -z "$PORT_8443_PIDS" ]; then
-  for pid in $PORT_8443_PIDS; do
-    kill_process $pid
-  done
-fi
-
-# Final check - make sure port 8443 is free
-echo "Verifying port 8443 is free..."
-if [ ! -z "$(sudo lsof -i:8443 -t 2>/dev/null)" ]; then
-  echo "ERROR: Port 8443 is still in use after cleanup attempts!"
-  sudo lsof -i:8443
-  exit 1
 fi
 
 # Update packages
 echo "Updating packages..."
-sudo apt update
 sudo apt install -y apache2 openssl libssl-dev g++ make
 
 # Configure Apache
@@ -64,9 +49,6 @@ sudo a2enmod rewrite || true
 sudo a2enmod proxy || true
 sudo a2enmod proxy_http || true
 sudo a2enmod headers || true
-
-# Try to enable proxy_https if it exists (might not on some systems)
-sudo a2enmod proxy_https 2>/dev/null || echo "Note: proxy_https module not available, continuing with proxy_http..."
 
 # Create Apache config for main site
 echo "Creating Apache configuration..."
@@ -97,7 +79,7 @@ cat >/tmp/grabbiel.com.conf <<'EOF'
 </VirtualHost>
 EOF
 
-# Create Apache config for API server
+# Create Apache config for API server - USING PORT 8444 instead of 8443
 cat >/tmp/server.grabbiel.com.conf <<'EOF'
 <VirtualHost *:80>
     ServerName server.grabbiel.com
@@ -111,9 +93,9 @@ cat >/tmp/server.grabbiel.com.conf <<'EOF'
     SSLCertificateFile /etc/letsencrypt/live/server.grabbiel.com/fullchain.pem
     SSLCertificateKeyFile /etc/letsencrypt/live/server.grabbiel.com/privkey.pem
     
-    # Forward API requests to the C++ server
-    ProxyPass / https://localhost:8443/
-    ProxyPassReverse / https://localhost:8443/
+    # Forward API requests to the C++ server - USING PORT 8444
+    ProxyPass / https://localhost:8444/
+    ProxyPassReverse / https://localhost:8444/
     
     # SSL Proxy configuration
     SSLProxyEngine on
@@ -143,12 +125,13 @@ sudo a2ensite grabbiel.com.conf
 sudo a2ensite server.grabbiel.com.conf
 sudo a2dissite 000-default.conf || true
 
-# Setup C++ server service
+# Setup C++ server service - USING PORT 8444
 echo "Setting up C++ server service..."
 cat >/tmp/grabbiel-server.service <<'EOF'
 [Unit]
 Description=Grabbiel C++ Web Server
 After=network.target
+Conflicts=api_server.service
 
 [Service]
 ExecStart=/repo/server/server
@@ -156,7 +139,7 @@ WorkingDirectory=/repo/server
 Restart=on-failure
 User=root
 Group=root
-Environment=PORT=8443
+Environment=PORT=8444
 RestartSec=5
 
 [Install]
@@ -164,6 +147,13 @@ WantedBy=multi-user.target
 EOF
 
 sudo mv /tmp/grabbiel-server.service /etc/systemd/system/
+
+# Modify the server.cpp to print more diagnostic info
+echo "Adding diagnostic logging to check port usage..."
+cat >>/repo/server/diagnostic.log <<'EOF'
+Checking active network connections:
+EOF
+sudo ss -tulpn >>/repo/server/diagnostic.log 2>&1
 
 # Compile the C++ server
 echo "Compiling C++ server..."
@@ -180,20 +170,9 @@ sudo systemctl daemon-reload
 sudo systemctl enable grabbiel-server
 sudo systemctl restart grabbiel-server
 
-# Stop Apache if it's running on port 80 or 443
-if systemctl is-active --quiet apache2; then
-  echo "Stopping Apache to free up ports..."
-  sudo systemctl stop apache2
-  sleep 2
-fi
-
-# Start Apache
-echo "Starting Apache..."
-sudo systemctl start apache2
-
 # Verify services are running
 echo "Verifying services..."
-sleep 2
+sleep 3
 
 # Check C++ server
 if sudo systemctl is-active --quiet grabbiel-server; then
@@ -201,8 +180,16 @@ if sudo systemctl is-active --quiet grabbiel-server; then
 else
   echo "❌ C++ server failed to start"
   sudo systemctl status grabbiel-server
+  echo "Checking server logs..."
+  sudo tail -n 20 /var/log/grabbiel-server.log
+  echo "Checking network status..."
+  sudo ss -tulpn | grep -E ':(8443|8444)'
   exit 1
 fi
+
+# Start Apache
+echo "Starting Apache..."
+sudo systemctl restart apache2
 
 # Check Apache
 if sudo systemctl is-active --quiet apache2; then
@@ -213,8 +200,4 @@ else
   exit 1
 fi
 
-# Verify ports
-echo "Checking port usage..."
-sudo netstat -tulpn | grep -E ':(80|443|8443)'
-
-echo "Setup complete!"
+echo "Setup complete! C++ server is running on port 8444"

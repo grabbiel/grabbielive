@@ -36,11 +36,14 @@ jobs:
         # SSH commands to inspect current server state before running setup
         ssh -i ~/.ssh/id_rsa $VM_USER@$VM_IP '
           echo "============ Current System State ============"
-          echo "Checking for processes using port 8443:"
-          sudo lsof -i:8443 || echo "No process using port 8443"
+          echo "Checking network ports:"
+          sudo ss -tulpn | grep -E ":(8443|8444|80|443)" || echo "No relevant ports in use"
           
-          echo "Checking server processes:"
-          ps aux | grep server | grep -v grep || echo "No server processes found"
+          echo "Checking for api_server process:"
+          ps aux | grep api_server | grep -v grep || echo "No api_server found"
+          
+          echo "Checking for grabbiel-server process:"
+          ps aux | grep "/repo/server/server" | grep -v grep || echo "No grabbiel-server found"
           
           echo "Checking service status:"
           sudo systemctl status grabbiel-server || echo "Service not found"
@@ -52,4 +55,22 @@ jobs:
           cd /repo/server && \
           chmod +x setup_server.sh && \
           sudo bash -x ./setup_server.sh
+          
+          # Final verification
+          echo "============ Final Verification ============"
+          echo "Network ports after setup:"
+          sudo ss -tulpn | grep -E ":(8443|8444|80|443)" || echo "No relevant ports in use"
+          
+          echo "Server process status:"
+          ps aux | grep server | grep -v grep
+          
+          echo "Service status:"
+          sudo systemctl status grabbiel-server --no-pager
+          sudo systemctl status apache2 --no-pager
+          
+          # Test server response
+          echo "Testing server response:"
+          curl -k https://localhost:8444/me || echo "Server not responding on port 8444"
+          
+          echo "============ Deployment Complete ============"
         '

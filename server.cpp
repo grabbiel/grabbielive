@@ -532,13 +532,13 @@ int main(int argc, char const *argv[]) {
   LOG_INFO("Server starting initialization...");
 
   // Get port from environment or use default
-  int port = 8443; // Default port
+  int port = 8444; // Default port
   const char *env_port = getenv("PORT");
   if (env_port != nullptr) {
     port = atoi(env_port);
     if (port <= 0) {
-      LOG_ERROR("Invalid PORT value: ", env_port, ", using default 8443");
-      port = 8443;
+      LOG_ERROR("Invalid PORT value: ", env_port, ", using default 8444");
+      port = 8444;
     }
   }
   LOG_INFO("Using port: ", port);
@@ -590,7 +590,7 @@ int main(int argc, char const *argv[]) {
 
     // Additional debugging
     LOG_ERROR("Port in use check:");
-    system("ss -tulpn | grep 8443 >> /var/log/grabbiel-server.log");
+    system("ss -tulpn | grep 8444 >> /var/log/grabbiel-server.log");
 
     exit(EXIT_FAILURE);
   }
