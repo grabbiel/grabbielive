@@ -1,5 +1,4 @@
 #!/bin/bash
-# setup_server.sh
 set -e # Exit on any error
 
 echo "Setting up Grabbiel Server environment..."
