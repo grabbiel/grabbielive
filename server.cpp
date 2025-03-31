@@ -647,5 +647,6 @@ int main(int argc, char const *argv[]) {
   SSL_CTX_free(ctx);
   close(server_fd);
   EVP_cleanup();
+
   return 0;
 }
