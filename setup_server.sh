@@ -61,7 +61,7 @@ WorkingDirectory=/repo/server
 Restart=always
 User=root
 Group=root
-Environment=PORT=8443
+Environment=PORT=443
 
 [Install]
 WantedBy=multi-user.target
