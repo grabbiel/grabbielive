@@ -589,7 +589,6 @@ int main(int argc, char const *argv[]) {
       exit(EXIT_FAILURE);
     }
 
-    // ssl
     SSL *ssl = SSL_new(ctx);
     SSL_set_fd(ssl, new_socket);
 
