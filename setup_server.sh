@@ -17,9 +17,10 @@ Description=Grabbiel C++ HTTPS Server
 After=network.target
 
 [Service]
+WorkingDirectory=/repo/server
 ExecStart=/repo/server/server
 Restart=on-failure
-User=www-data
+User=fcruzado22
 
 [Install]
 WantedBy=multi-user.target
