@@ -1,4 +1,5 @@
 #include "include/Logger.hpp"
+#include <algorithm>
 #include <arpa/inet.h>
 #include <cstdio>
 #include <cstdlib>
