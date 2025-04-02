@@ -120,8 +120,14 @@ void handle_get_article_file(SSL *ssl, std::string &response,
     content_type = "application/javascript";
   }
 
+  response = "HTTP/1.1 200 OK\r\n";
   response += "Content-Type: " + content_type + "\r\n";
-  response += "Content-Length: " + std::to_string(body.length()) + "\r\n\r\n";
+  response += "Access-Control-Allow-Origin: https://";
+  response += ALLOWED_DOMAIN;
+  response += "\r\n";
+  response += "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n";
+  response += "Access-Control-Allow-Headers: Content-Type, X-Requested-With, "
+              "HX-Request, HX-Trigger, HX-Target, HX-Current-URL\r\n";
   response += body;
 
   SSL_write(ssl, response.c_str(), response.length());
