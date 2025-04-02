@@ -3,10 +3,13 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
+#include <fstream>
 #include <netinet/in.h>
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 #include <set>
+#include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
@@ -15,6 +18,8 @@
 
 #define BUFFER_SIZE 4096
 #define ALLOWED_DOMAIN "grabbiel.com"
+
+namespace fs = std::filesystem;
 
 bool is_allowed_client(const struct sockaddr_in &client_addr,
                        const std::string &origin) {
@@ -66,6 +71,60 @@ void configure_context(SSL_CTX *ctx, const char *cert_path,
     ERR_print_errors_fp(stderr);
     exit(EXIT_FAILURE);
   }
+}
+
+bool ends_with(const std::string &str, const std::string &suffix) {
+  return str.size() >= suffix.size() &&
+         str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
+void handle_get_article_file(SSL *ssl, std::string &response,
+                             const std::string &path) {
+  // Expected path: /article/15/index.html
+  std::string article_prefix = "/article/";
+  std::string storage_root = "/var/lib/article-content/";
+
+  std::string subpath =
+      path.substr(article_prefix.length()); // e.g., "15/index.html"
+  size_t slash_pos = subpath.find('/');
+  if (slash_pos == std::string::npos) {
+    LOG_WARNING("Invalid article file path: ", path);
+    response = "HTTP/1.1 400 Bad Request\r\n\r\n";
+    SSL_write(ssl, response.c_str(), response.length());
+    return;
+  }
+
+  std::string article_id = subpath.substr(0, slash_pos); // "15"
+  std::string file_path = subpath.substr(slash_pos + 1); // "index.html"
+  std::string full_path = storage_root + article_id + "/" + file_path;
+
+  std::ifstream file(full_path, std::ios::binary);
+  if (!file.is_open()) {
+    LOG_WARNING("Article file not found: ", full_path);
+    response = "HTTP/1.1 404 Not Found\r\n\r\n";
+    SSL_write(ssl, response.c_str(), response.length());
+    return;
+  }
+
+  std::ostringstream buffer;
+  buffer << file.rdbuf();
+  std::string body = buffer.str();
+
+  // Infer content type
+  std::string content_type = "text/plain";
+  if (ends_with(file_path, ".html")) {
+    content_type = "text/html";
+  } else if (ends_with(file_path, ".css")) {
+    content_type = "text/css";
+  } else if (ends_with(file_path, ".js")) {
+    content_type = "application/javascript";
+  }
+
+  response += "Content-Type: " + content_type + "\r\n";
+  response += "Content-Length: " + std::to_string(body.length()) + "\r\n\r\n";
+  response += body;
+
+  SSL_write(ssl, response.c_str(), response.length());
 }
 
 void handle_get_shop(SSL *ssl, std::string &response) {
@@ -477,6 +536,18 @@ void handle_get(SSL *ssl, const std::string &req) {
     handle_get_pretty(ssl, response);
   } else if (path == "/scuba") {
     handle_get_scuba(ssl, response);
+  } else if (path.rfind("/article/", 0) == 0) {
+    if (std::count(path.begin(), path.end(), '/') == 2 &&
+        !ends_with(path, "/")) {
+      handle_get_article_file(ssl, response, path + "/index.html");
+    } else {
+      handle_get_article_file(ssl, response, path);
+    }
+  } else {
+    std::string not_found = "HTTP/1.1 404 Not Found\r\nContent-Type: "
+                            "text/plain\r\n\r\n404 - Not Found";
+    SSL_write(ssl, not_found.c_str(), not_found.length());
+    LOG_WARNING("Unhandled GET path: ", path);
   }
   LOG_INFO("Sent response for path: ", path, ", length: ", response.length());
 }
