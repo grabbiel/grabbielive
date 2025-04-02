@@ -128,6 +128,8 @@ void handle_get_article_file(SSL *ssl, std::string &response,
   response += "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n";
   response += "Access-Control-Allow-Headers: Content-Type, X-Requested-With, "
               "HX-Request, HX-Trigger, HX-Target, HX-Current-URL\r\n";
+  response += "Content-Length: " + std::to_string(body.length()) + "\r\n\r\n";
+  response += "Connection: close\r\n\r\n";
   response += body;
 
   SSL_write(ssl, response.c_str(), response.length());
