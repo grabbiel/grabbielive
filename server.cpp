@@ -558,7 +558,7 @@ void handle_get_home(SSL *ssl, std::string &response) {
                    title +
                    "</h2>"
                    "<a href='https://blog.grabbiel.com/" +
-                   id + "'>Read more</a></div>";
+                   id + "' target='_blank'>Read more</a></div>";
       } else if (type == "interactive") {
         content += "<div class='content-block interactive-block'>"
                    "<img src='" +
@@ -568,7 +568,8 @@ void handle_get_home(SSL *ssl, std::string &response) {
                    title +
                    "</h2>"
                    "<a href='https://game.grabbiel.com/" +
-                   id + "' class='launch-button'>Launch</a></div>";
+                   id +
+                   "' target='_blank' class='launch-button'>Launch</a></div>";
       } else if (type == "reel") {
         content += "<div class='content-block reel-block'>"
                    "<video src='" +
@@ -580,7 +581,7 @@ void handle_get_home(SSL *ssl, std::string &response) {
                    title +
                    "</p>"
                    "<a href='https://shorts.grabbiel.com/" +
-                   id + "'>Watch full</a></div>";
+                   id + "' target='_blank'>Watch full</a></div>";
       }
     }
     sqlite3_finalize(stmt);
@@ -676,7 +677,7 @@ void handle_get_home_more(SSL *ssl, std::string &response,
                    title +
                    "</h2>"
                    "<a href='/article/" +
-                   id + "'>Read more</a></div>";
+                   id + "' target='_blank'>Read more</a></div>";
       } else if (type == "interactive") {
         content += "<div class='content-block interactive-block'>"
                    "<img src='" +
@@ -686,7 +687,8 @@ void handle_get_home_more(SSL *ssl, std::string &response,
                    title +
                    "</h2>"
                    "<a href='/" +
-                   slug + "' class='launch-button'>Launch</a></div>";
+                   slug +
+                   "' class='launch-button' target='_blank'>Launch</a></div>";
       } else if (type == "reel") {
         content += "<div class='content-block reel-block'>"
                    "<video src='" +
@@ -695,7 +697,10 @@ void handle_get_home_more(SSL *ssl, std::string &response,
                    "style='aspect-ratio:9/16; width:100%; "
                    "border-radius:10px;'></video>"
                    "<p class='block-caption'>" +
-                   title + "</p></div>";
+                   title +
+                   "</p>"
+                   "<a href='https://shorts.grabbiel.com/" +
+                   id + "' target='_blank'>Watch full</a></div>";
       }
     }
     sqlite3_finalize(stmt);
