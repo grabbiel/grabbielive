@@ -10,6 +10,7 @@
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 #include <set>
+#include <sqlite3.h>
 #include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,8 +20,19 @@
 
 #define BUFFER_SIZE 4096
 #define ALLOWED_DOMAIN "grabbiel.com"
+#define DB_PATH "/var/lib/grabbiel-db/content.db"
 
 namespace fs = std::filesystem;
+
+sqlite3 *open_database() {
+  sqlite3 *db = nullptr;
+  if (sqlite3_open(DB_PATH, &db) != SQLITE_OK) {
+    LOG_ERROR("Failed to open SQLite DB: ", sqlite3_errmsg(db));
+    return nullptr;
+  }
+
+  return db;
+}
 
 bool is_allowed_client(const struct sockaddr_in &client_addr,
                        const std::string &origin) {
@@ -77,6 +89,25 @@ void configure_context(SSL_CTX *ctx, const char *cert_path,
 bool ends_with(const std::string &str, const std::string &suffix) {
   return str.size() >= suffix.size() &&
          str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
+std::string extract_query_param(const std::string &path,
+                                const std::string &key) {
+  size_t qpos = path.find('?');
+  if (qpos == std::string::npos)
+    return "";
+
+  std::string query = path.substr(qpos + 1);
+  size_t key_pos = query.find(key + "=");
+  if (key_pos == std::string::npos)
+    return "";
+
+  size_t val_start = key_pos + key.length() + 1;
+  size_t val_end = query.find('&', val_start);
+  if (val_end == std::string::npos)
+    val_end = query.size();
+
+  return query.substr(val_start, val_end - val_start);
 }
 
 void handle_get_article_file(SSL *ssl, std::string &response,
@@ -468,6 +499,223 @@ void handle_get_anime(SSL *ssl, std::string &response) {
   SSL_write(ssl, response.c_str(), response.length());
   printf("Processed POST request to /shop\n");
 }
+void handle_get_home(SSL *ssl, std::string &response) {
+  sqlite3 *db = open_database();
+  if (!db)
+    return;
+
+  std::string content = "<div id='home-feed' class='home-feed'>";
+
+  const char *sql = R"SQL(
+    SELECT id, title, url_slug, thumbnail_url, type, created_at, extra FROM (
+      SELECT cb.id, cb.title, cb.url_slug, cb.thumbnail_url, ct.type, cb.created_at, NULL AS extra
+      FROM content_blocks cb
+      JOIN content_types ct ON cb.type_id = ct.id
+      WHERE cb.status = 'published' AND ct.type IN ('article', 'interactive')
+
+      UNION ALL
+
+      SELECT v.id, r.caption AS title, '' AS url_slug, '' AS thumbnail_url, 'reel' AS type, v.created_at, v.gcs_path AS extra
+      FROM reels r
+      JOIN videos v ON v.id = r.video_id
+      WHERE v.is_reel = 1 AND v.processing_status = 'complete'
+    )
+    ORDER BY created_at DESC
+    LIMIT 12;
+  )SQL";
+
+  sqlite3_stmt *stmt;
+  std::string lastCreatedAt;
+
+  if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK) {
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+      std::string id = std::to_string(sqlite3_column_int(stmt, 0));
+      std::string title =
+          reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
+      std::string slug =
+          reinterpret_cast<const char *>(sqlite3_column_text(stmt, 2)) ?: "";
+      std::string thumb =
+          reinterpret_cast<const char *>(sqlite3_column_text(stmt, 3)) ?: "";
+      std::string type =
+          reinterpret_cast<const char *>(sqlite3_column_text(stmt, 4));
+      std::string created =
+          reinterpret_cast<const char *>(sqlite3_column_text(stmt, 5));
+      std::string extra =
+          reinterpret_cast<const char *>(sqlite3_column_text(stmt, 6)) ?: "";
+
+      // Track the last timestamp for infinite scrolling
+      lastCreatedAt = created;
+
+      if (type == "article") {
+        content += "<div class='content-block article-block'>"
+                   "<img src='" +
+                   thumb +
+                   "' class='block-thumb' alt='article thumbnail'>"
+                   "<h2 class='block-title'>" +
+                   title +
+                   "</h2>"
+                   "<a href='/article/" +
+                   id + "'>Read more</a></div>";
+      } else if (type == "interactive") {
+        content += "<div class='content-block interactive-block'>"
+                   "<img src='" +
+                   thumb +
+                   "' class='block-thumb' alt='game preview'>"
+                   "<h2 class='block-title'>" +
+                   title +
+                   "</h2>"
+                   "<a href='/" +
+                   slug + "' class='launch-button'>Launch</a></div>";
+      } else if (type == "reel") {
+        content += "<div class='content-block reel-block'>"
+                   "<video src='" +
+                   extra +
+                   "' autoplay muted loop playsinline "
+                   "style='aspect-ratio:9/16; width:100%; "
+                   "border-radius:10px;'></video>"
+                   "<p class='block-caption'>" +
+                   title + "</p></div>";
+      }
+    }
+    sqlite3_finalize(stmt);
+  }
+
+  sqlite3_close(db);
+  content += "</div>"; // Close feed
+
+  // Inject the infinite scroll loader (HTMX)
+  if (!lastCreatedAt.empty()) {
+    content += "<div id='feed-loader' "
+               "hx-get='/home/more?before=" +
+               lastCreatedAt +
+               "' "
+               "hx-trigger='revealed' "
+               "hx-swap='afterend' "
+               "hx-target='#feed-loader'>"
+               "<p>Loading more...</p></div>";
+  }
+
+  response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+  response += "Connection: close\r\n\r\n";
+  response += content;
+
+  SSL_write(ssl, response.c_str(), response.length());
+  LOG_INFO("Sent /home feed with infinite scroll loader");
+}
+
+void handle_get_home_more(SSL *ssl, std::string &response,
+                          const std::string &path) {
+  std::string before = extract_query_param(path, "before");
+  if (before.empty()) {
+    LOG_WARNING("Missing ?before= timestamp for /home/more");
+    response = "HTTP/1.1 400 Bad Request\r\n\r\nMissing 'before' parameter";
+    SSL_write(ssl, response.c_str(), response.length());
+    return;
+  }
+
+  sqlite3 *db = open_database();
+  if (!db)
+    return;
+
+  std::string content;
+  std::string lastCreatedAt;
+
+  const char *sql = R"SQL(
+    SELECT id, title, url_slug, thumbnail_url, type, created_at, extra FROM (
+      SELECT cb.id, cb.title, cb.url_slug, cb.thumbnail_url, ct.type, cb.created_at, NULL AS extra
+      FROM content_blocks cb
+      JOIN content_types ct ON cb.type_id = ct.id
+      WHERE cb.status = 'published' AND ct.type IN ('article', 'interactive') AND cb.created_at < ?
+
+      UNION ALL
+
+      SELECT v.id, r.caption AS title, '' AS url_slug, '' AS thumbnail_url, 'reel' AS type, v.created_at, v.gcs_path AS extra
+      FROM reels r
+      JOIN videos v ON v.id = r.video_id
+      WHERE v.is_reel = 1 AND v.processing_status = 'complete' AND v.created_at < ?
+    )
+    ORDER BY created_at DESC
+    LIMIT 12;
+  )SQL";
+
+  sqlite3_stmt *stmt;
+  if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK) {
+    // Bind `before` twice (for both subqueries)
+    sqlite3_bind_text(stmt, 1, before.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 2, before.c_str(), -1, SQLITE_TRANSIENT);
+
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+      std::string id = std::to_string(sqlite3_column_int(stmt, 0));
+      std::string title =
+          reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
+      std::string slug =
+          reinterpret_cast<const char *>(sqlite3_column_text(stmt, 2)) ?: "";
+      std::string thumb =
+          reinterpret_cast<const char *>(sqlite3_column_text(stmt, 3)) ?: "";
+      std::string type =
+          reinterpret_cast<const char *>(sqlite3_column_text(stmt, 4));
+      std::string created =
+          reinterpret_cast<const char *>(sqlite3_column_text(stmt, 5));
+      std::string extra =
+          reinterpret_cast<const char *>(sqlite3_column_text(stmt, 6)) ?: "";
+
+      lastCreatedAt = created; // Track for next page
+
+      if (type == "article") {
+        content += "<div class='content-block article-block'>"
+                   "<img src='" +
+                   thumb +
+                   "' class='block-thumb'>"
+                   "<h2 class='block-title'>" +
+                   title +
+                   "</h2>"
+                   "<a href='/article/" +
+                   id + "'>Read more</a></div>";
+      } else if (type == "interactive") {
+        content += "<div class='content-block interactive-block'>"
+                   "<img src='" +
+                   thumb +
+                   "' class='block-thumb'>"
+                   "<h2 class='block-title'>" +
+                   title +
+                   "</h2>"
+                   "<a href='/" +
+                   slug + "' class='launch-button'>Launch</a></div>";
+      } else if (type == "reel") {
+        content += "<div class='content-block reel-block'>"
+                   "<video src='" +
+                   extra +
+                   "' autoplay muted loop playsinline "
+                   "style='aspect-ratio:9/16; width:100%; "
+                   "border-radius:10px;'></video>"
+                   "<p class='block-caption'>" +
+                   title + "</p></div>";
+      }
+    }
+    sqlite3_finalize(stmt);
+  }
+
+  sqlite3_close(db);
+
+  // Add new scroll trigger only if we loaded enough
+  if (!lastCreatedAt.empty()) {
+    content += "<div id='feed-loader' "
+               "hx-get='/home/more?before=" +
+               lastCreatedAt +
+               "' "
+               "hx-trigger='revealed' "
+               "hx-swap='afterend' "
+               "hx-target='#feed-loader'>"
+               "<p>Loading more...</p></div>";
+  }
+
+  response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
+  response += "Connection: close\r\n\r\n";
+  response += content;
+
+  SSL_write(ssl, response.c_str(), response.length());
+  LOG_INFO("Sent additional feed to /home/more?before=" + before);
+}
 
 void handle_get(SSL *ssl, const std::string &req) {
   size_t path_start = req.find(" ") + 1;
@@ -545,6 +793,10 @@ void handle_get(SSL *ssl, const std::string &req) {
     handle_get_pretty(ssl, response);
   } else if (path == "/scuba") {
     handle_get_scuba(ssl, response);
+  } else if (path == "/home") {
+    handle_get_home(ssl, response);
+  } else if (path.rfind("/home/more", 0) == 0) {
+    handle_get_home_more(ssl, response, path);
   } else if (path.rfind("/article/", 0) == 0) {
     if (std::count(path.begin(), path.end(), '/') == 2 &&
         !ends_with(path, "/")) {
