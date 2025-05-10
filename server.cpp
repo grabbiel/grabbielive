@@ -111,7 +111,8 @@ std::string extract_query_param(const std::string &path,
 }
 
 void handle_get_article_file(SSL *ssl, std::string &response,
-                             const std::string &path) {
+                             const std::string &path,
+                             const std::string &origin) {
   // Expected path: /article/15/index.html
   std::string article_prefix = "/article/";
   std::string storage_root = "/var/lib/article-content/";
@@ -154,9 +155,11 @@ void handle_get_article_file(SSL *ssl, std::string &response,
 
   response = "HTTP/1.1 200 OK\r\n";
   response += "Content-Type: " + content_type + "\r\n";
-  response += "Access-Control-Allow-Origin: https://";
-  response += ALLOWED_DOMAIN;
-  response += "\r\n";
+  if (!origin.empty()) {
+    response += "Access-Control-Allow-Origin: " + origin + "\r\n";
+  } else {
+    response += "Access-Control-Allow-Origin: https://grabbiel.com\r\n";
+  }
   response += "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n";
   response += "Access-Control-Allow-Headers: Content-Type, X-Requested-With, "
               "HX-Request, HX-Trigger, HX-Target, HX-Current-URL\r\n";
@@ -554,7 +557,7 @@ void handle_get_home(SSL *ssl, std::string &response) {
                    "<h2 class='block-title'>" +
                    title +
                    "</h2>"
-                   "<a href='/article/" +
+                   "<a href='https://blog.grabbiel.com/" +
                    id + "'>Read more</a></div>";
       } else if (type == "interactive") {
         content += "<div class='content-block interactive-block'>"
@@ -564,8 +567,8 @@ void handle_get_home(SSL *ssl, std::string &response) {
                    "<h2 class='block-title'>" +
                    title +
                    "</h2>"
-                   "<a href='/" +
-                   slug + "' class='launch-button'>Launch</a></div>";
+                   "<a href='https://game.grabbiel.com/" +
+                   id + "' class='launch-button'>Launch</a></div>";
       } else if (type == "reel") {
         content += "<div class='content-block reel-block'>"
                    "<video src='" +
@@ -574,14 +577,17 @@ void handle_get_home(SSL *ssl, std::string &response) {
                    "style='aspect-ratio:9/16; width:100%; "
                    "border-radius:10px;'></video>"
                    "<p class='block-caption'>" +
-                   title + "</p></div>";
+                   title +
+                   "</p>"
+                   "<a href='https://shorts.grabbiel.com/" +
+                   id + "'>Watch full</a></div>";
       }
     }
     sqlite3_finalize(stmt);
   }
 
   sqlite3_close(db);
-  content += "</div>"; // Close feed
+  content += "</div>"; // Close home-feed
 
   // Inject the infinite scroll loader (HTMX)
   if (!lastCreatedAt.empty()) {
@@ -717,7 +723,76 @@ void handle_get_home_more(SSL *ssl, std::string &response,
   LOG_INFO("Sent additional feed to /home/more?before=" + before);
 }
 
-void handle_get(SSL *ssl, const std::string &req) {
+void handle_get_blog_articles(SSL *ssl, std::string &response) {
+  sqlite3 *db = open_database();
+  if (!db)
+    return;
+
+  std::string content = "<div class='articles-grid'>";
+
+  const char *sql = R"SQL(
+    SELECT cb.id, cb.title, cb.url_slug, cb.thumbnail_url, cb.created_at, 
+           (SELECT value FROM content_metadata WHERE content_id = cb.id AND key = 'summary') as summary
+    FROM content_blocks cb
+    JOIN content_types ct ON cb.type_id = ct.id
+    WHERE cb.status = 'published' AND ct.type = 'article'
+    ORDER BY cb.created_at DESC
+    LIMIT 20;
+  )SQL";
+
+  sqlite3_stmt *stmt;
+
+  if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK) {
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+      std::string id = std::to_string(sqlite3_column_int(stmt, 0));
+      std::string title =
+          reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
+      std::string thumb =
+          reinterpret_cast<const char *>(sqlite3_column_text(stmt, 3)) ?: "";
+      std::string created =
+          reinterpret_cast<const char *>(sqlite3_column_text(stmt, 4));
+      std::string summary =
+          reinterpret_cast<const char *>(sqlite3_column_text(stmt, 5))
+              ?: "No summary available";
+
+      content += "<div class='article-card'>"
+                 "<img src='" +
+                 thumb + "' alt='" + title +
+                 "'>"
+                 "<div class='article-info'>"
+                 "<h2>" +
+                 title +
+                 "</h2>"
+                 "<p class='date'>" +
+                 created +
+                 "</p>"
+                 "<p class='summary'>" +
+                 summary +
+                 "</p>"
+                 "<a href='/" +
+                 id +
+                 "' class='read-more'>Read Article</a>"
+                 "</div></div>";
+    }
+    sqlite3_finalize(stmt);
+  }
+
+  sqlite3_close(db);
+  content += "</div>";
+
+  response = "HTTP/1.1 200 OK\r\n";
+  response += "Content-Type: text/html\r\n";
+  response += "Access-Control-Allow-Origin: https://blog.grabbiel.com\r\n";
+  response += "Access-Control-Allow-Methods: GET, OPTIONS\r\n";
+  response += "Access-Control-Allow-Headers: Content-Type, X-Requested-With, "
+              "HX-Request, HX-Trigger, HX-Target, HX-Current-URL\r\n";
+  response +=
+      "Content-Length: " + std::to_string(content.length()) + "\r\n\r\n";
+  response += content;
+
+  SSL_write(ssl, response.c_str(), response.length());
+}
+void handle_get(SSL *ssl, const std::string &req, const std::string &origin) {
   size_t path_start = req.find(" ") + 1;
   size_t path_end = req.find(" ", path_start);
   std::string path = req.substr(path_start, path_end - path_start);
@@ -726,9 +801,11 @@ void handle_get(SSL *ssl, const std::string &req) {
 
   std::string response = "HTTP/1.1 200 OK\r\n";
   response += "Content-Type: text/html\r\n";
-  response += "Access-Control-Allow-Origin: https://";
-  response += ALLOWED_DOMAIN;
-  response += "\r\n";
+  if (!origin.empty()) {
+    response += "Access-Control-Allow-Origin: " + origin + "\r\n";
+  } else {
+    response += "Access-Control-Allow-Origin: https://grabbiel.com\r\n";
+  }
   response += "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n";
   response += "Access-Control-Allow-Headers: Content-Type, X-Requested-With, "
               "HX-Request, HX-Trigger, HX-Target, HX-Current-URL\r\n";
@@ -797,12 +874,14 @@ void handle_get(SSL *ssl, const std::string &req) {
     handle_get_home(ssl, response);
   } else if (path.rfind("/home/more", 0) == 0) {
     handle_get_home_more(ssl, response, path);
+  } else if (path == "/blog/articles") {
+    handle_get_blog_articles(ssl, response);
   } else if (path.rfind("/article/", 0) == 0) {
     if (std::count(path.begin(), path.end(), '/') == 2 &&
         !ends_with(path, "/")) {
-      handle_get_article_file(ssl, response, path + "/index.html");
+      handle_get_article_file(ssl, response, path + "/index.html", origin);
     } else {
-      handle_get_article_file(ssl, response, path);
+      handle_get_article_file(ssl, response, path, origin);
     }
   } else {
     std::string not_found = "HTTP/1.1 404 Not Found\r\nContent-Type: "
@@ -834,9 +913,11 @@ void handle_request(SSL *ssl, const char *request,
 
   if (req.find("OPTIONS") == 0) {
     std::string response = "HTTP/1.1 200 OK\r\n";
-    response += "Access-Control-Allow-Origin: https://";
-    response += ALLOWED_DOMAIN;
-    response += "\r\n";
+    if (!origin.empty()) {
+      response += "Access-Control-Allow-Origin: " + origin + "\r\n";
+    } else {
+      response += "Access-Control-Allow-Origin: https://grabbiel.com\r\n";
+    }
     response += "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n";
     response += "Access-Control-Allow-Headers: Content-Type, X-Requested-With, "
                 "HX-Request, HX-Trigger, HX-Target, HX-Current-URL\r\n";
@@ -849,7 +930,7 @@ void handle_request(SSL *ssl, const char *request,
     return;
   }
   if (req.find("GET") == 0) {
-    handle_get(ssl, req);
+    handle_get(ssl, req, origin);
   } else {
     std::string response = "HTTP/1.1 404 Not Found\r\n";
     response += "Content-Type: text/plain\r\n";
