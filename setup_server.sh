@@ -8,7 +8,7 @@ sudo apt install -y g++ make openssl libssl-dev apache2
 
 echo "=========== Building the C++ HTTPS server ==========="
 cd /repo/server
-g++ -std=c++17 server.cpp -o server -lssl -lcrypto -pthread
+g++ -std=c++17 server.cpp -o server -lssl -lcrypto -lsqlite3 -pthread
 
 echo "=========== Setting up systemd service ==========="
 sudo tee /etc/systemd/system/grabbiel-server.service >/dev/null <<EOF
