@@ -172,9 +172,8 @@ void handle_get_article_file(SSL *ssl, std::string &response,
 
 void handle_get_shop(SSL *ssl, std::string &response) {
   std::string content = "";
-  content =
-      "<div id='text-space' class='content' style='background-color: pink; "
-      "width: 90vw; height: 120vh;'>SHOP IS HERE</div>";
+  content = "<div id='text-space' class='content'  "
+            "width: 90vw; height: 120vh;'>SHOP IS HERE</div>";
   response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
   response += "Connection: close\r\n\r\n";
   response += content;
@@ -183,9 +182,8 @@ void handle_get_shop(SSL *ssl, std::string &response) {
 }
 void handle_get_donate(SSL *ssl, std::string &response) {
   std::string content = "";
-  content =
-      "<div id='text-space' class='content' style='background-color: pink; "
-      "width: 90vw; height: 120vh;'>DONATIONS ARE HERE</div>";
+  content = "<div id='text-space' class='content'  "
+            "width: 90vw; height: 120vh;'>DONATIONS ARE HERE</div>";
   response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
   response += "Connection: close\r\n\r\n";
   response += content;
@@ -194,9 +192,8 @@ void handle_get_donate(SSL *ssl, std::string &response) {
 }
 void handle_get_assets(SSL *ssl, std::string &response) {
   std::string content = "";
-  content =
-      "<div id='text-space' class='content' style='background-color: pink; "
-      "width: 90vw; height: 120vh;'>ASSETS ARE HERE</div>";
+  content = "<div id='text-space' class='content'  "
+            "width: 90vw; height: 120vh;'>ASSETS ARE HERE</div>";
   response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
   response += "Connection: close\r\n\r\n";
   response += content;
@@ -206,9 +203,8 @@ void handle_get_assets(SSL *ssl, std::string &response) {
 
 void handle_get_forum(SSL *ssl, std::string &response) {
   std::string content = "";
-  content =
-      "<div id='text-space' class='content' style='background-color: pink; "
-      "width: 90vw; height: 120vh;'>FORUM IS HERE</div>";
+  content = "<div id='text-space' class='content'  "
+            "width: 90vw; height: 120vh;'>FORUM IS HERE</div>";
   response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
   response += "Connection: close\r\n\r\n";
   response += content;
@@ -218,9 +214,8 @@ void handle_get_forum(SSL *ssl, std::string &response) {
 
 void handle_get_updates(SSL *ssl, std::string &response) {
   std::string content = "";
-  content =
-      "<div id='text-space' class='content' style='background-color: pink; "
-      "width: 90vw; height: 120vh;'>UPDATES ARE HERE</div>";
+  content = "<div id='text-space' class='content'  "
+            "width: 90vw; height: 120vh;'>UPDATES ARE HERE</div>";
   response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
   response += "Connection: close\r\n\r\n";
   response += content;
@@ -230,9 +225,8 @@ void handle_get_updates(SSL *ssl, std::string &response) {
 
 void handle_get_me(SSL *ssl, std::string &response) {
   std::string content = "";
-  content =
-      "<div id='text-space' class='content' style='background-color: pink; "
-      "width: 90vw; height: 120vh;'>ME IS HERE</div>";
+  content = "<div id='text-space' class='content' "
+            "width: 90vw; height: 120vh;'>ME IS HERE</div>";
   response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
   response += "Connection: close\r\n\r\n";
   response += content;
@@ -242,9 +236,8 @@ void handle_get_me(SSL *ssl, std::string &response) {
 
 void handle_get_photos(SSL *ssl, std::string &response) {
   std::string content = "";
-  content =
-      "<div id='text-space' class='content' style='background-color: pink; "
-      "width: 90vw; height: 120vh;'>PHOTOS ARE HERE</div>";
+  content = "<div id='text-space' class='content'  "
+            "width: 90vw; height: 120vh;'>PHOTOS ARE HERE</div>";
   response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
   response += "Connection: close\r\n\r\n";
   response += content;
@@ -254,9 +247,8 @@ void handle_get_photos(SSL *ssl, std::string &response) {
 
 void handle_get_links(SSL *ssl, std::string &response) {
   std::string content = "";
-  content =
-      "<div id='text-space' class='content' style='background-color: pink; "
-      "width: 90vw; height: 120vh;'>LINKS ARE HERE</div>";
+  content = "<div id='text-space' class='content'  "
+            "width: 90vw; height: 120vh;'>LINKS ARE HERE</div>";
   response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
   response += "Connection: close\r\n\r\n";
   response += content;
@@ -266,9 +258,8 @@ void handle_get_links(SSL *ssl, std::string &response) {
 
 void handle_get_news(SSL *ssl, std::string &response) {
   std::string content = "";
-  content =
-      "<div id='text-space' class='content' style='background-color: pink; "
-      "width: 90vw; height: 120vh;'>NEWS ARE HERE</div>";
+  content = "<div id='text-space' class='content'  "
+            "width: 90vw; height: 120vh;'>NEWS ARE HERE</div>";
   response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
   response += "Connection: close\r\n\r\n";
   response += content;
@@ -278,9 +269,8 @@ void handle_get_news(SSL *ssl, std::string &response) {
 
 void handle_get_videos(SSL *ssl, std::string &response) {
   std::string content = "";
-  content =
-      "<div id='text-space' class='content' style='background-color: pink; "
-      "width: 90vw; height: 120vh;'>VIDEOS ARE HERE</div>";
+  content = "<div id='text-space' class='content'  "
+            "width: 90vw; height: 120vh;'>VIDEOS ARE HERE</div>";
   response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
   response += "Connection: close\r\n\r\n";
   response += content;
@@ -290,9 +280,8 @@ void handle_get_videos(SSL *ssl, std::string &response) {
 
 void handle_get_read(SSL *ssl, std::string &response) {
   std::string content = "";
-  content =
-      "<div id='text-space' class='content' style='background-color: pink; "
-      "width: 90vw; height: 120vh;'>READ IS HERE</div>";
+  content = "<div id='text-space' class='content'  "
+            "width: 90vw; height: 120vh;'>READ IS HERE</div>";
   response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
   response += "Connection: close\r\n\r\n";
   response += content;
@@ -302,9 +291,8 @@ void handle_get_read(SSL *ssl, std::string &response) {
 
 void handle_get_github(SSL *ssl, std::string &response) {
   std::string content = "";
-  content =
-      "<div id='text-space' class='content' style='background-color: pink; "
-      "width: 90vw; height: 120vh;'>GITHUB IS HERE</div>";
+  content = "<div id='text-space' class='content'  "
+            "width: 90vw; height: 120vh;'>GITHUB IS HERE</div>";
   response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
   response += "Connection: close\r\n\r\n";
   response += content;
@@ -314,9 +302,8 @@ void handle_get_github(SSL *ssl, std::string &response) {
 
 void handle_get_food(SSL *ssl, std::string &response) {
   std::string content = "";
-  content =
-      "<div id='text-space' class='content' style='background-color: pink; "
-      "width: 90vw; height: 120vh;'>FOOD IS HERE</div>";
+  content = "<div id='text-space' class='content'  "
+            "width: 90vw; height: 120vh;'>FOOD IS HERE</div>";
   response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
   response += "Connection: close\r\n\r\n";
   response += content;
@@ -326,9 +313,8 @@ void handle_get_food(SSL *ssl, std::string &response) {
 
 void handle_get_music(SSL *ssl, std::string &response) {
   std::string content = "";
-  content =
-      "<div id='text-space' class='content' style='background-color: pink; "
-      "width: 90vw; height: 120vh;'>MUSIC IS HERE</div>";
+  content = "<div id='text-space' class='content'  "
+            "width: 90vw; height: 120vh;'>MUSIC IS HERE</div>";
   response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
   response += "Connection: close\r\n\r\n";
   response += content;
@@ -338,9 +324,8 @@ void handle_get_music(SSL *ssl, std::string &response) {
 
 void handle_get_renders(SSL *ssl, std::string &response) {
   std::string content = "";
-  content =
-      "<div id='text-space' class='content' style='background-color: pink; "
-      "width: 90vw; height: 120vh;'>RENDERS ARE HERE</div>";
+  content = "<div id='text-space' class='content'  "
+            "width: 90vw; height: 120vh;'>RENDERS ARE HERE</div>";
   response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
   response += "Connection: close\r\n\r\n";
   response += content;
@@ -350,9 +335,8 @@ void handle_get_renders(SSL *ssl, std::string &response) {
 
 void handle_get_writing(SSL *ssl, std::string &response) {
   std::string content = "";
-  content =
-      "<div id='text-space' class='content' style='background-color: pink; "
-      "width: 90vw; height: 120vh;'>WRITING IS HERE</div>";
+  content = "<div id='text-space' class='content'  "
+            "width: 90vw; height: 120vh;'>WRITING IS HERE</div>";
   response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
   response += "Connection: close\r\n\r\n";
   response += content;
@@ -362,9 +346,8 @@ void handle_get_writing(SSL *ssl, std::string &response) {
 
 void handle_get_vynils(SSL *ssl, std::string &response) {
   std::string content = "";
-  content =
-      "<div id='text-space' class='content' style='background-color: pink; "
-      "width: 90vw; height: 120vh;'>VINYLS IS HERE</div>";
+  content = "<div id='text-space' class='content'  "
+            "width: 90vw; height: 120vh;'>VINYLS IS HERE</div>";
   response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
   response += "Connection: close\r\n\r\n";
   response += content;
@@ -374,9 +357,8 @@ void handle_get_vynils(SSL *ssl, std::string &response) {
 
 void handle_get_travel(SSL *ssl, std::string &response) {
   std::string content = "";
-  content =
-      "<div id='text-space' class='content' style='background-color: pink; "
-      "width: 90vw; height: 120vh;'>TRAVEL IS HERE</div>";
+  content = "<div id='text-space' class='content'  "
+            "width: 90vw; height: 120vh;'>TRAVEL IS HERE</div>";
   response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
   response += "Connection: close\r\n\r\n";
   response += content;
@@ -386,9 +368,8 @@ void handle_get_travel(SSL *ssl, std::string &response) {
 
 void handle_get_fishing(SSL *ssl, std::string &response) {
   std::string content = "";
-  content =
-      "<div id='text-space' class='content' style='background-color: pink; "
-      "width: 90vw; height: 120vh;'>FISHING IS HERE</div>";
+  content = "<div id='text-space' class='content'  "
+            "width: 90vw; height: 120vh;'>FISHING IS HERE</div>";
   response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
   response += "Connection: close\r\n\r\n";
   response += content;
@@ -398,9 +379,8 @@ void handle_get_fishing(SSL *ssl, std::string &response) {
 
 void handle_get_scuba(SSL *ssl, std::string &response) {
   std::string content = "";
-  content =
-      "<div id='text-space' class='content' style='background-color: pink; "
-      "width: 90vw; height: 120vh;'>SCUBA IS HERE</div>";
+  content = "<div id='text-space' class='content'  "
+            "width: 90vw; height: 120vh;'>SCUBA IS HERE</div>";
   response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
   response += "Connection: close\r\n\r\n";
   response += content;
@@ -410,9 +390,8 @@ void handle_get_scuba(SSL *ssl, std::string &response) {
 
 void handle_get_foreign(SSL *ssl, std::string &response) {
   std::string content = "";
-  content =
-      "<div id='text-space' class='content' style='background-color: pink; "
-      "width: 90vw; height: 120vh;'>FOREIGN IS HERE</div>";
+  content = "<div id='text-space' class='content'  "
+            "width: 90vw; height: 120vh;'>FOREIGN IS HERE</div>";
   response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
   response += "Connection: close\r\n\r\n";
   response += content;
@@ -422,9 +401,8 @@ void handle_get_foreign(SSL *ssl, std::string &response) {
 
 void handle_get_leetcode(SSL *ssl, std::string &response) {
   std::string content = "";
-  content =
-      "<div id='text-space' class='content' style='background-color: pink; "
-      "width: 90vw; height: 120vh;'>LEETCODE IS HERE</div>";
+  content = "<div id='text-space' class='content'  "
+            "width: 90vw; height: 120vh;'>LEETCODE IS HERE</div>";
   response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
   response += "Connection: close\r\n\r\n";
   response += content;
@@ -434,9 +412,8 @@ void handle_get_leetcode(SSL *ssl, std::string &response) {
 
 void handle_get_pretty(SSL *ssl, std::string &response) {
   std::string content = "";
-  content =
-      "<div id='text-space' class='content' style='background-color: pink; "
-      "width: 90vw; height: 120vh;'>PRETTY IS HERE</div>";
+  content = "<div id='text-space' class='content'  "
+            "width: 90vw; height: 120vh;'>PRETTY IS HERE</div>";
   response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
   response += "Connection: close\r\n\r\n";
   response += content;
@@ -446,9 +423,8 @@ void handle_get_pretty(SSL *ssl, std::string &response) {
 
 void handle_get_robots(SSL *ssl, std::string &response) {
   std::string content = "";
-  content =
-      "<div id='text-space' class='content' style='background-color: pink; "
-      "width: 90vw; height: 120vh;'>ROBOTS IS HERE</div>";
+  content = "<div id='text-space' class='content'  "
+            "width: 90vw; height: 120vh;'>ROBOTS IS HERE</div>";
   response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
   response += "Connection: close\r\n\r\n";
   response += content;
@@ -458,9 +434,8 @@ void handle_get_robots(SSL *ssl, std::string &response) {
 
 void handle_get_stats(SSL *ssl, std::string &response) {
   std::string content = "";
-  content =
-      "<div id='text-space' class='content' style='background-color: pink; "
-      "width: 90vw; height: 120vh;'>STATS IS HERE</div>";
+  content = "<div id='text-space' class='content'  "
+            "width: 90vw; height: 120vh;'>STATS IS HERE</div>";
   response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
   response += "Connection: close\r\n\r\n";
   response += content;
@@ -470,9 +445,8 @@ void handle_get_stats(SSL *ssl, std::string &response) {
 
 void handle_get_wishlist(SSL *ssl, std::string &response) {
   std::string content = "";
-  content =
-      "<div id='text-space' class='content' style='background-color: pink; "
-      "width: 90vw; height: 120vh;'>WISHLIST IS HERE</div>";
+  content = "<div id='text-space' class='content'  "
+            "width: 90vw; height: 120vh;'>WISHLIST IS HERE</div>";
   response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
   response += "Connection: close\r\n\r\n";
   response += content;
@@ -482,9 +456,8 @@ void handle_get_wishlist(SSL *ssl, std::string &response) {
 
 void handle_get_sections(SSL *ssl, std::string &response) {
   std::string content = "";
-  content =
-      "<div id='text-space' class='content' style='background-color: pink; "
-      "width: 90vw; height: 120vh;'>SECTIONS ARE HERE</div>";
+  content = "<div id='text-space' class='content'  "
+            "width: 90vw; height: 120vh;'>SECTIONS ARE HERE</div>";
   response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
   response += "Connection: close\r\n\r\n";
   response += content;
@@ -493,9 +466,8 @@ void handle_get_sections(SSL *ssl, std::string &response) {
 }
 void handle_get_anime(SSL *ssl, std::string &response) {
   std::string content = "";
-  content =
-      "<div id='text-space' class='content' style='background-color: pink; "
-      "width: 90vw; height: 120vh;'>ANIME IS HERE</div>";
+  content = "<div id='text-space' class='content'  "
+            "width: 90vw; height: 120vh;'>ANIME IS HERE</div>";
   response += "Content-Length: " + std::to_string(content.length()) + "\r\n";
   response += "Connection: close\r\n\r\n";
   response += content;
