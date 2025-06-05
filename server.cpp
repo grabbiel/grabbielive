@@ -529,7 +529,7 @@ void handle_get_home(SSL *ssl, std::string &response) {
                    "<h2 class='block-title'>" +
                    title +
                    "</h2>"
-                   "<a href='https://blog.grabbiel.com/article/" +
+                   "<a href='https://blog.grabbiel.com/" +
                    id + "' target='_blank'>Read more</a></div>";
       } else if (type == "interactive") {
         content += "<div class='content-block interactive-block'>"
