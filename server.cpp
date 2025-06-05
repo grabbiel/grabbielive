@@ -539,7 +539,7 @@ void handle_get_home(SSL *ssl, std::string &response) {
                    "<h2 class='block-title'>" +
                    title +
                    "</h2>"
-                   "<a href='https://game.grabbiel.com/" +
+                   "<a href='https://games.grabbiel.com/" +
                    id +
                    "' target='_blank' class='launch-button'>Launch</a></div>";
       } else if (type == "reel") {
